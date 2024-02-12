@@ -4,6 +4,8 @@ import (
 	"sync"
 )
 
+var wildcard []byte = []byte{'*', '.'}
+
 // ServeMux is an DNS request multiplexer. It matches the zone name of
 // each incoming request against a list of registered patterns add calls
 // the handler for the pattern that most closely matches the zone name.
@@ -28,6 +30,15 @@ func NewServeMux() *ServeMux {
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
+func replaceWithAsteriskLabel(qname string) (wildcard string) {
+	i, shot := NextLabel(qname, 0)
+	if shot {
+		return ""
+	}
+
+	return "*." + qname[i:]
+}
+
 func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
@@ -37,8 +48,22 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 
 	q = CanonicalName(q)
 
+	var matchedWildcard Handler
+
 	var handler Handler
 	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
+		// Exact match was not found in the previous label - try matching a wildcard
+		withWildcard := replaceWithAsteriskLabel(q)
+		if h, ok := mux.z[withWildcard]; ok {
+			if t != TypeDS {
+				matchedWildcard = h
+				//return h
+				//continue
+			} else {
+				// Continue for DS to see if we have a parent too, if so delegate to the parent
+				handler = h
+			}
+		}
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				return h
@@ -46,9 +71,13 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
 			handler = h
 		}
+		// We did not find an exact match, but if we matched the wildcard we can use that
+		if matchedWildcard != nil {
+			return matchedWildcard
+		}
 	}
 
-	// Wildcard match, if we have found nothing try the root zone as a last resort.
+	// If we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
 		return h
 	}
