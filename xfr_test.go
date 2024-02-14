@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto/tls"
 	"testing"
 	"time"
 )
@@ -87,6 +88,27 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	axfrTestingSuite(t, addrstr)
 }
 
+func TestSingleEnvelopeXfrTLS(t *testing.T) {
+	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
+	defer HandleRemove("miek.nl.")
+
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	tlsConfig := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+	s, addrstr, _, err := RunLocalTLSServer(":0", &tlsConfig)
+	if err != nil {
+		t.Fatalf("unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	axfrTestingSuiteTLS(t, addrstr)
+}
+
 func TestMultiEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", MultipleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
@@ -107,6 +129,38 @@ func axfrTestingSuite(t *testing.T, addrstr string) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
 
+	c, err := tr.In(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to zone transfer in", err)
+	}
+
+	var records []RR
+	for msg := range c {
+		if msg.Error != nil {
+			t.Fatal(msg.Error)
+		}
+		records = append(records, msg.RR...)
+	}
+
+	if len(records) != len(xfrTestData) {
+		t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
+	}
+
+	for i, rr := range records {
+		if !IsDuplicate(rr, xfrTestData[i]) {
+			t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
+		}
+	}
+}
+
+func axfrTestingSuiteTLS(t *testing.T, addrstr string) {
+	tr := new(Transfer)
+	m := new(Msg)
+	m.SetAxfr("miek.nl.")
+
+	tr.TLS = &tls.Config{
+		InsecureSkipVerify: true,
+	}
 	c, err := tr.In(m, addrstr)
 	if err != nil {
 		t.Fatal("failed to zone transfer in", err)

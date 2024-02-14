@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 )
@@ -20,6 +21,7 @@ type Transfer struct {
 	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
 	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	tsigTimersOnly bool
+	TLS            *tls.Config // TLS config. If Xfr over TLS will be attempted
 }
 
 func (t *Transfer) tsigProvider() TsigProvider {
@@ -57,7 +59,11 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	}
 
 	if t.Conn == nil {
-		t.Conn, err = DialTimeout("tcp", a, timeout)
+		if t.TLS != nil {
+			t.Conn, err = DialTimeoutWithTLS("tcp-tls", a, t.TLS, timeout)
+		} else {
+			t.Conn, err = DialTimeout("tcp", a, timeout)
+		}
 		if err != nil {
 			return nil, err
 		}
