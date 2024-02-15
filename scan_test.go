@@ -359,6 +359,15 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 	})
 }
 
+func TestParseOpenEscape(t *testing.T) {
+	if _, err := NewRR("example.net IN CNAME example.net."); err != nil {
+		t.Fatalf("expected no error, but got: %s", err)
+	}
+	if _, err := NewRR("example.net IN CNAME example.org\\"); err == nil {
+		t.Fatalf("expected an error, but got none")
+	}
+}
+
 func BenchmarkNewRR(b *testing.B) {
 	const name1 = "12345678901234567890123456789012345.12345678.123."
 	const s = name1 + " 3600 IN MX 10 " + name1
