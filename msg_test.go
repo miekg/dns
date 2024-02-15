@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -321,6 +322,72 @@ func TestLenDynamicA(t *testing.T) {
 		}
 		if off != len(msg) {
 			t.Errorf("Len(rr) wrong for %T: Len(rr) = %d, PackRR(rr) = %d", rr, len(msg), off)
+		}
+	}
+}
+
+func TestUnPackForErrBuf(t *testing.T) {
+	var testCases = []struct {
+		domainName   string
+		noOfARecords int
+		expectErrBuf bool
+	}{
+		// Length of response for 15 A records will be 482 bytes and UDPSize is 512. Response is not truncated, so expect no error.
+		{domainName: "example123.org.", noOfARecords: 15, expectErrBuf: false},
+
+		// Length of response for 17 A records will be 542 bytes and UDPSize is 512. Response is truncated, so expect ErrBuf.
+		{domainName: "example123.org.", noOfARecords: 17, expectErrBuf: true},
+
+		// Length of response for 16 A records will be 512 bytes and UDPSize is 512. Response is not truncated, so expect no error.
+		{domainName: "example123.org.", noOfARecords: 16, expectErrBuf: false},
+	}
+	for _, tc := range testCases {
+		testName := tc.domainName + " with " + strconv.Itoa(tc.noOfARecords) + " A-records"
+		t.Run(testName, func(t *testing.T) {
+			testpackUnpack(t, tc.domainName, tc.noOfARecords, tc.expectErrBuf)
+		})
+	}
+}
+
+func testpackUnpack(t *testing.T, domainName string, noOfARecords int, expectErrBuf bool) {
+	m := new(Msg)
+	m.SetQuestion(domainName, TypeA)
+	m.Authoritative = true
+	rrHeader := RR_Header{
+		Name:   domainName,
+		Rrtype: TypeA,
+		Class:  ClassINET,
+		Ttl:    0,
+	}
+
+	m.Answer = make([]RR, noOfARecords)
+	for i := 0; i < noOfARecords; i++ {
+		ip := net.IPv4(127, 0, 0, byte(i+1))
+		aRec := &A{
+			Hdr: rrHeader,
+			A:   ip.To4(),
+		}
+		m.Answer[i] = aRec
+	}
+
+	packedmsg, err := m.Pack()
+	if err != nil {
+		t.Fatalf("Pack failed for %v", err)
+	}
+
+	// Default buffer size is 512 bytes for UDP.
+	if len(packedmsg) > MinMsgSize {
+		packedmsg = packedmsg[:MinMsgSize]
+	}
+
+	err = m.Unpack(packedmsg)
+	if expectErrBuf {
+		if err != ErrBuf {
+			t.Error("Expected ErrBuf due to truncation")
+		}
+	} else {
+		if err != nil {
+			t.Errorf("Expected no error, but got: %v", err)
 		}
 	}
 }
