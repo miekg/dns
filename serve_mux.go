@@ -28,13 +28,23 @@ func NewServeMux() *ServeMux {
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
-func replaceWithAsteriskLabel(qname string) (wildcard string) {
-	i, shot := NextLabel(qname, 0)
-	if shot {
-		return ""
+func (mux *ServeMux) matchWildcard(q string) Handler {
+
+	wildcards := "*."
+	// replace the labels of q with wildcard labels until we get a match
+	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
+		// skip to removing the first label
+		if off == 0 {
+			continue
+		}
+		if h, ok := mux.z[wildcards+q[off:]]; ok {
+			return h
+		}
+		wildcards += "*."
 	}
 
-	return "*." + qname[i:]
+	// we found nothing
+	return nil
 }
 
 func (mux *ServeMux) match(q string, t uint16) Handler {
@@ -55,14 +65,14 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
 			handler = h
 		}
-	
-		// Exact match was not found - try matching a wildcard
-		withWildcard := replaceWithAsteriskLabel(q)
-		if h, ok := mux.z[withWildcard]; ok {
-			if t != TypeDS {
-				return h
-			} else {
-				// Continue for DS to see if we have a parent too, if so delegate to the parent
+
+		// we did not find a match - try wildcards if this is the first iteration only,
+		// as otherwise we will be attempting the same match on every iteration
+		if off == 0 {
+			if h := mux.matchWildcard(q); h != nil {
+				if t != TypeDS {
+					return h
+				}
 				handler = h
 			}
 		}

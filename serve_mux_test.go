@@ -72,6 +72,41 @@ func TestWildcardMatch(t *testing.T) {
 	}
 }
 
+func TestTwoWildcardMatch(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", mockHandler("root"))
+	mux.Handle("example.com.", mockHandler("example"))
+	mux.Handle("*.*.example.com.", mockHandler("2wildcard"))
+
+	handler := mux.match("foo.bar.example.com.", TypeTXT)
+	if handler == nil {
+		t.Error("foo.bar.example.com match failed")
+	}
+	if string(handler.(mockHandler)) != "2wildcard" {
+		t.Error("foo.bar.example.com did not match *.*.example.com wildcard")
+	}
+
+	handler = mux.match("www.example.com.", TypeTXT)
+	if handler != nil && string(handler.(mockHandler)) != "example" {
+		t.Error("www.example.com unexpectedly matched", string(handler.(mockHandler)))
+	}
+}
+
+func TestWildcardMustNotMatchEntireZone(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", mockHandler("root"))
+	mux.Handle("*.example.com.", mockHandler("2wildcard"))
+
+	handler := mux.match("foo.bar.example.com.", TypeTXT)
+	if handler == nil {
+		t.Error("match failed")
+	}
+
+	if handler != nil && string(handler.(mockHandler)) != "root" {
+		t.Error("foo.bar.example.com unexpectedly matched", string(handler.(mockHandler)))
+	}
+}
+
 func TestCaseFolding(t *testing.T) {
 	mux := NewServeMux()
 	mux.Handle("_udp.example.com.", HandlerFunc(HelloServer))
