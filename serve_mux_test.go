@@ -86,6 +86,8 @@ func TestTwoWildcardMatch(t *testing.T) {
 		t.Error("foo.bar.example.com did not match *.*.example.com wildcard")
 	}
 
+	// this tests wildcards as empty non-terminals
+	// (`*.example.com` is empty in this example)
 	handler = mux.match("www.example.com.", TypeTXT)
 	if handler != nil && string(handler.(mockHandler)) != "example" {
 		t.Error("www.example.com unexpectedly matched", string(handler.(mockHandler)))
