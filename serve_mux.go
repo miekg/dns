@@ -28,6 +28,25 @@ func NewServeMux() *ServeMux {
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
+func (mux *ServeMux) matchWildcard(q string) Handler {
+
+	wildcards := "*."
+	// replace the labels of q with wildcard labels until we get a match
+	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
+		// skip to removing the first label
+		if off == 0 {
+			continue
+		}
+		if h, ok := mux.z[wildcards+q[off:]]; ok {
+			return h
+		}
+		wildcards += "*."
+	}
+
+	// we found nothing
+	return nil
+}
+
 func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
@@ -46,9 +65,20 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
 			handler = h
 		}
+
+		// we did not find a match - try wildcards if this is the first iteration only,
+		// as otherwise we will be attempting the same match on every iteration
+		if off == 0 {
+			if h := mux.matchWildcard(q); h != nil {
+				if t != TypeDS {
+					return h
+				}
+				handler = h
+			}
+		}
 	}
 
-	// Wildcard match, if we have found nothing try the root zone as a last resort.
+	// If we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
 		return h
 	}

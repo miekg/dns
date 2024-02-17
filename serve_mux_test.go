@@ -28,6 +28,87 @@ func TestDotAsCatchAllWildcard(t *testing.T) {
 	}
 }
 
+type mockHandler string
+
+func (mockHandler) ServeDNS(w ResponseWriter, r *Msg) {
+	panic("implement me")
+}
+
+func TestWildcardMatch(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle("example.com.", mockHandler("example.com"))
+	mux.Handle("*.example.com.", mockHandler("*.example.com"))
+	mux.Handle("a.example.com.", mockHandler("a.example.com"))
+
+	handler := mux.match("www.example.com.", TypeTXT)
+	if handler == nil {
+		t.Error("example.com match failed")
+	}
+	if string(handler.(mockHandler)) != "*.example.com" {
+		t.Error("www.example.com did not match *.example.com wildcard")
+	}
+
+	handler = mux.match("a.example.com.", TypeTXT)
+	if handler == nil {
+		t.Error("a.example.com match failed")
+	}
+	if string(handler.(mockHandler)) != "a.example.com" {
+		t.Error("a.example.com did not match subdomain a")
+	}
+
+	handler = mux.match("example.com", TypeTXT)
+	if handler == nil {
+		t.Error("example.com match failed")
+	}
+	if string(handler.(mockHandler)) != "example.com" {
+		t.Error("example.com did not match example.com, but with", handler)
+	}
+
+	handler = mux.match("foo.bar.example.com", TypeTXT)
+	// see https://datatracker.ietf.org/doc/html/rfc4592#section-2.2.1
+	// a wildcard does not match names below its zone
+	if handler != nil && string(handler.(mockHandler)) == "*.example.com" {
+		t.Error("foo.bar.example.com matched unexpectedly with non terminal")
+	}
+}
+
+func TestTwoWildcardMatch(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", mockHandler("root"))
+	mux.Handle("example.com.", mockHandler("example"))
+	mux.Handle("*.*.example.com.", mockHandler("2wildcard"))
+
+	handler := mux.match("foo.bar.example.com.", TypeTXT)
+	if handler == nil {
+		t.Error("foo.bar.example.com match failed")
+	}
+	if string(handler.(mockHandler)) != "2wildcard" {
+		t.Error("foo.bar.example.com did not match *.*.example.com wildcard")
+	}
+
+	// this tests wildcards as empty non-terminals
+	// (`*.example.com` is empty in this example)
+	handler = mux.match("www.example.com.", TypeTXT)
+	if handler != nil && string(handler.(mockHandler)) != "example" {
+		t.Error("www.example.com unexpectedly matched", string(handler.(mockHandler)))
+	}
+}
+
+func TestWildcardMustNotMatchEntireZone(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", mockHandler("root"))
+	mux.Handle("*.example.com.", mockHandler("2wildcard"))
+
+	handler := mux.match("foo.bar.example.com.", TypeTXT)
+	if handler == nil {
+		t.Error("match failed")
+	}
+
+	if handler != nil && string(handler.(mockHandler)) != "root" {
+		t.Error("foo.bar.example.com unexpectedly matched", string(handler.(mockHandler)))
+	}
+}
+
 func TestCaseFolding(t *testing.T) {
 	mux := NewServeMux()
 	mux.Handle("_udp.example.com.", HandlerFunc(HelloServer))
