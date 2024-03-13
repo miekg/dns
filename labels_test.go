@@ -188,6 +188,7 @@ func TestIsDomainName(t *testing.T) {
 		"mi\\k.nl":               {true, 2},
 		longestDomain:            {true, 4},
 		longestUnprintableDomain: {true, 4},
+		domainTooLong:            {false, 3},
 	}
 	for d, ok := range names {
 		l, k := IsDomainName(d)
