@@ -183,7 +183,7 @@ func IsDomainName(s string) (labels int, ok bool) {
 	// XXX: The logic in this function was copied from packDomainName and
 	// should be kept in sync with that function.
 
-	const lenmsg = 256
+	const lenmsg = 254
 
 	if len(s) == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return 0, false

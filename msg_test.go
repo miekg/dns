@@ -26,6 +26,7 @@ var (
 	// These are the longest possible domain names in presentation format.
 	longestDomain            = maxPrintableLabel[:61] + strings.Join([]string{".", ".", ".", "."}, maxPrintableLabel)
 	longestUnprintableDomain = maxUnprintableLabel[:61*4] + strings.Join([]string{".", ".", ".", "."}, maxUnprintableLabel)
+	domainTooLong            = maxPrintableLabel[:62] + strings.Join([]string{".", ".", ".", "."}, maxPrintableLabel)
 )
 
 func TestPackNoSideEffect(t *testing.T) {
