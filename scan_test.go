@@ -427,3 +427,31 @@ func BenchmarkZoneParser(b *testing.B) {
 		}
 	}
 }
+
+func TestEscapedStringOffset(t *testing.T) {
+	var cases = []struct {
+		input          string
+		inputOffset    int
+		expectedOffset int
+	}{
+		{"simple string with no escape sequences", 20, 20},
+		{"simple string with no escape sequences", 500, -1},
+		{`\;\088\\\;\120\\`, 0, 0},
+		{`\;\088\\\;\120\\`, 1, 2},
+		{`\;\088\\\;\120\\`, 2, 6},
+		{`\;\088\\\;\120\\`, 3, 8},
+		{`\;\088\\\;\120\\`, 4, 10},
+		{`\;\088\\\;\120\\`, 5, 14},
+		{`\;\088\\\;\120\\`, 6, 16},
+		{`\;\088\\\;\120\\`, 7, -1},
+	}
+	for i, test := range cases {
+		outputOffset := escapedStringOffset(test.input, test.inputOffset)
+		if outputOffset != test.expectedOffset {
+			t.Errorf(
+				"Test %d (input %#q offset %d) returned offset %d but expected %d",
+				i, test.input, test.inputOffset, outputOffset, test.expectedOffset,
+			)
+		}
+	}
+}
