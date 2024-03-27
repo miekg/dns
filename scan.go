@@ -1283,7 +1283,7 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 			cmeters *= 10
 		}
 	}
-	// This slighly ugly condition will allow omitting the 'meter' part, like .01 (meaning 0.01m = 1cm).
+	// This slightly ugly condition will allow omitting the 'meter' part, like .01 (meaning 0.01m = 1cm).
 	if !hasCM || mStr != "" {
 		meters, err = strconv.Atoi(mStr)
 		// RFC1876 states the max value is 90000000.00.  The latter two conditions enforce it.
