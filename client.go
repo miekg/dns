@@ -48,10 +48,11 @@ func (co *Conn) tsigProvider() TsigProvider {
 
 // A Client defines parameters for a DNS client.
 type Client struct {
-	Net       string      // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	UDPSize   uint16      // minimum receive buffer for UDP messages
-	TLSConfig *tls.Config // TLS connection configuration
-	Dialer    *net.Dialer // a net.Dialer used to set local address, timeouts and more
+	Net                 string                                                               // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	UDPSize             uint16                                                               // minimum receive buffer for UDP messages
+	TLSConfig           *tls.Config                                                          // TLS connection configuration
+	Dialer              *net.Dialer                                                          // a net.Dialer used to set local address, timeouts and more
+	DialContextOverride func(ctx context.Context, network, address string) (net.Conn, error) // DialContextOverride allows to override net.Dialer with a custom implementation
 	// Timeout is a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout,
 	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
 	// Client.Dialer) or context.Context.Deadline (see ExchangeContext)
@@ -112,6 +113,13 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 // DialContext connects to the address on the named network, with a context.Context.
 func (c *Client) DialContext(ctx context.Context, address string) (conn *Conn, err error) {
+	conn = new(Conn)
+
+	if c.DialContextOverride != nil {
+		conn.Conn, err = c.DialContextOverride(ctx, c.Net, address)
+		return
+	}
+
 	// create a new dialer with the appropriate timeout
 	var d net.Dialer
 	if c.Dialer == nil {
@@ -127,7 +135,6 @@ func (c *Client) DialContext(ctx context.Context, address string) (conn *Conn, e
 
 	useTLS := strings.HasPrefix(network, "tcp") && strings.HasSuffix(network, "-tls")
 
-	conn = new(Conn)
 	if useTLS {
 		network = strings.TrimSuffix(network, "-tls")
 
