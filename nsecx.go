@@ -1,7 +1,7 @@
 package dns
 
 import (
-	"crypto/sha1"
+	"crypto/sha3"
 	"encoding/hex"
 	"strings"
 )
@@ -26,7 +26,7 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 	}
 	name = name[:off]
 
-	s := sha1.New()
+	s := sha3.New512()
 	// k = 0
 	s.Write(name)
 	s.Write(wireSalt)
