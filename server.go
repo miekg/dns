@@ -111,7 +111,7 @@ func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
 	}
 
 	config := tls.Config{
-		Certificates: []tls.Certificate{cert},
+		Certificates: []tls.Certificate{cert},  MinVersion: tls.VersionTLS12
 	}
 
 	server := &Server{
