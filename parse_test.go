@@ -1285,6 +1285,60 @@ func TestNewPrivateKey(t *testing.T) {
 			t.Errorf("[%v] Private keys differ:\n%#v\n%#v", AlgorithmToString[algo.name], privkey, newPrivKey)
 		}
 	}
+
+	rsaKey := new(DNSKEY)
+	rsaKey.Hdr.Rrtype = TypeDNSKEY
+	rsaKey.Hdr.Name = "miek.nl."
+	rsaKey.Hdr.Class = ClassINET
+	rsaKey.Hdr.Ttl = 14400
+	rsaKey.Flags = 256
+	rsaKey.Protocol = 3
+	rsaKey.Algorithm = RSASHA256
+	_, err := rsaKey.Generate(512)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ecdsapKey := new(DNSKEY)
+	ecdsapKey.Hdr.Rrtype = TypeDNSKEY
+	ecdsapKey.Hdr.Name = "miek.nl."
+	ecdsapKey.Hdr.Class = ClassINET
+	ecdsapKey.Hdr.Ttl = 14400
+	ecdsapKey.Flags = 256
+	ecdsapKey.Protocol = 3
+	ecdsapKey.Algorithm = ECDSAP256SHA256
+	ecdsapPrivkey, err := ecdsapKey.Generate(256)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// test that algo in input matches algo in DNSKEY
+	_, err = rsaKey.NewPrivateKey(ecdsapKey.PrivateKeyString(ecdsapPrivkey))
+	if err != ErrKeyAlgMismatch {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	// test that public key in input matches public key in DNSKEY
+	ecdsapKey.PublicKey = rsaKey.PublicKey
+	_, err = ecdsapKey.NewPrivateKey(ecdsapKey.PrivateKeyString(ecdsapPrivkey))
+	if err != ErrPubKeyMismatch {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// load using an empty dnskey
+	ecdsapNewKey := new(DNSKEY)
+	ecdsapNewKey.Hdr.Rrtype = TypeDNSKEY
+	ecdsapNewKey.Hdr.Name = "miek.nl."
+	ecdsapNewKey.Hdr.Class = ClassINET
+	ecdsapNewKey.Hdr.Ttl = 14400
+	ecdsapNewKey.Flags = 256
+	ecdsapNewKey.Protocol = 3
+	ecdsapNewKey.Algorithm = ECDSAP256SHA256
+	_, err = ecdsapNewKey.NewPrivateKey(ecdsapKey.PrivateKeyString(ecdsapPrivkey))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ecdsapNewKey.PublicKey != ecdsapKey.PublicKey {
+		t.Fatalf("PublicKey of new dnskey %s should match key in key loaded: %s", ecdsapNewKey.PublicKey, ecdsapKey.PublicKey)
+	}
 }
 
 // special input test

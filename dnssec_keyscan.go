@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/rsa"
 	"io"
 	"math/big"
@@ -14,6 +15,7 @@ import (
 
 // NewPrivateKey returns a PrivateKey by parsing the string s.
 // s should be in the same form of the BIND private key files.
+// Will set the PublicKey in the DNSKEY to the PublicKey contained within the PrivateKey
 func (k *DNSKEY) NewPrivateKey(s string) (crypto.PrivateKey, error) {
 	if s == "" || s[len(s)-1] != '\n' { // We need a closing newline
 		return k.ReadPrivateKey(strings.NewReader(s+"\n"), "")
@@ -23,8 +25,6 @@ func (k *DNSKEY) NewPrivateKey(s string) (crypto.PrivateKey, error) {
 
 // ReadPrivateKey reads a private key from the io.Reader q. The string file is
 // only used in error reporting.
-// The public key must be known, because some cryptographic algorithms embed
-// the public inside the privatekey.
 func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, error) {
 	m, err := parseKey(q, file)
 	if m == nil {
@@ -36,37 +36,53 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, er
 	if m["private-key-format"] != "v1.2" && m["private-key-format"] != "v1.3" {
 		return nil, ErrPrivKey
 	}
-	// TODO(mg): check if the pubkey matches the private key
 	algoStr, _, _ := strings.Cut(m["algorithm"], " ")
-	algo, err := strconv.ParseUint(algoStr, 10, 8)
+	_algo, err := strconv.ParseUint(algoStr, 10, 8)
+	algo := uint8(_algo)
 	if err != nil {
 		return nil, ErrPrivKey
 	}
-	switch uint8(algo) {
+	if algo != k.Algorithm {
+		return nil, ErrKeyAlgMismatch
+	}
+	prevPublicKey := k.PublicKey
+	switch algo {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512:
 		priv, err := readPrivateKeyRSA(m)
 		if err != nil {
 			return nil, err
 		}
-		pub := k.publicKeyRSA()
-		if pub == nil {
-			return nil, ErrKey
+		k.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
+		if prevPublicKey != "" && prevPublicKey != k.PublicKey {
+			return nil, ErrPubKeyMismatch
 		}
-		priv.PublicKey = *pub
 		return priv, nil
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		priv, err := readPrivateKeyECDSA(m)
 		if err != nil {
 			return nil, err
 		}
-		pub := k.publicKeyECDSA()
-		if pub == nil {
-			return nil, ErrKey
+		switch algo {
+		case ECDSAP256SHA256:
+			priv.PublicKey.Curve = elliptic.P256()
+		case ECDSAP384SHA384:
+			priv.PublicKey.Curve = elliptic.P384()
 		}
-		priv.PublicKey = *pub
+		priv.PublicKey.X, priv.PublicKey.Y = priv.PublicKey.Curve.ScalarBaseMult(priv.D.Bytes())
+		k.setPublicKeyECDSA(priv.PublicKey.X, priv.PublicKey.Y)
+		if prevPublicKey != "" && prevPublicKey != k.PublicKey {
+			return nil, ErrPubKeyMismatch
+		}
 		return priv, nil
 	case ED25519:
-		return readPrivateKeyED25519(m)
+		priv, err := readPrivateKeyED25519(m)
+		if err != nil {
+			return nil, err
+		}
+		if prevPublicKey != "" && prevPublicKey != k.PublicKey {
+			return nil, ErrPubKeyMismatch
+		}
+		return priv, nil
 	default:
 		return nil, ErrAlg
 	}
