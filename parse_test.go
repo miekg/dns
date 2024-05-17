@@ -1331,13 +1331,15 @@ func TestNewPrivateKey(t *testing.T) {
 	ecdsapNewKey.Hdr.Ttl = 14400
 	ecdsapNewKey.Flags = 256
 	ecdsapNewKey.Protocol = 3
-	ecdsapNewKey.Algorithm = ECDSAP256SHA256
 	_, err = ecdsapNewKey.NewPrivateKey(ecdsapKey.PrivateKeyString(ecdsapPrivkey))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ecdsapNewKey.PublicKey != ecdsapKey.PublicKey {
 		t.Fatalf("PublicKey of new dnskey %s should match key in key loaded: %s", ecdsapNewKey.PublicKey, ecdsapKey.PublicKey)
+	}
+	if ecdsapNewKey.Algorithm != ECDSAP256SHA256 {
+		t.Fatalf("Algorithm of new dnskey %d is set to algorithm in key loaded", ecdsapNewKey.Algorithm)
 	}
 }
 

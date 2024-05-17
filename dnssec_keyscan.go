@@ -42,7 +42,11 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, er
 	if err != nil {
 		return nil, ErrPrivKey
 	}
-	if algo != k.Algorithm {
+
+	// if algorithm isn't set in dnskey, set it from loaded file
+	if k.Algorithm == 0 {
+		k.Algorithm = algo
+	} else if algo != k.Algorithm {
 		return nil, ErrKeyAlgMismatch
 	}
 	prevPublicKey := k.PublicKey
