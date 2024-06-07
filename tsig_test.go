@@ -354,7 +354,7 @@ func TestTsigGenerateProvider(t *testing.T) {
 				Extra:    []RR{&tsig},
 			}
 
-			_, mac, err := tsigGenerateProvider(req, new(testProvider), "", false)
+			_, mac, err := TsigGenerateWithProvider(req, new(testProvider), "", false)
 			if err != table.err {
 				t.Fatalf("error doesn't match: expected '%s' but got '%s'", table.err, err)
 			}
@@ -397,7 +397,7 @@ func TestTsigVerifyProvider(t *testing.T) {
 			}
 
 			provider := &testProvider{true}
-			msgData, _, err := tsigGenerateProvider(req, provider, "", false)
+			msgData, _, err := TsigGenerateWithProvider(req, provider, "", false)
 			if err != nil {
 				t.Error(err)
 			}

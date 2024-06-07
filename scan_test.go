@@ -1,12 +1,14 @@
 package dns
 
 import (
+	"errors"
 	"io"
-	"io/ioutil"
+	"io/fs"
 	"net"
 	"os"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 func TestZoneParserGenerate(t *testing.T) {
@@ -49,8 +51,7 @@ func TestZoneParserGenerate(t *testing.T) {
 }
 
 func TestZoneParserInclude(t *testing.T) {
-
-	tmpfile, err := ioutil.TempFile("", "dns")
+	tmpfile, err := os.CreateTemp("", "dns")
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %s", err)
 	}
@@ -98,8 +99,80 @@ func TestZoneParserInclude(t *testing.T) {
 	}
 }
 
+func TestZoneParserIncludeFS(t *testing.T) {
+	fsys := fstest.MapFS{
+		"db.foo": &fstest.MapFile{
+			Data: []byte("foo\tIN\tA\t127.0.0.1"),
+		},
+	}
+	zone := "$ORIGIN example.org.\n$INCLUDE db.foo\nbar\tIN\tA\t127.0.0.2"
+
+	var got int
+	z := NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowed(true)
+	z.SetIncludeFS(fsys)
+	for rr, ok := z.Next(); ok; _, ok = z.Next() {
+		switch rr.Header().Name {
+		case "foo.example.org.", "bar.example.org.":
+		default:
+			t.Fatalf("expected foo.example.org. or bar.example.org., but got %s", rr.Header().Name)
+		}
+		got++
+	}
+	if err := z.Err(); err != nil {
+		t.Fatalf("expected no error, but got %s", err)
+	}
+
+	if expected := 2; got != expected {
+		t.Errorf("failed to parse zone after include, expected %d records, got %d", expected, got)
+	}
+
+	fsys = fstest.MapFS{}
+
+	z = NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowed(true)
+	z.SetIncludeFS(fsys)
+	z.Next()
+	if err := z.Err(); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf(`expected fs.ErrNotExist but got: %T %v`, err, err)
+	}
+}
+
+func TestZoneParserIncludeFSPaths(t *testing.T) {
+	fsys := fstest.MapFS{
+		"baz/bat/db.foo": &fstest.MapFile{
+			Data: []byte("foo\tIN\tA\t127.0.0.1"),
+		},
+	}
+
+	for _, p := range []string{
+		"../bat/db.foo",
+		"/baz/bat/db.foo",
+	} {
+		zone := "$ORIGIN example.org.\n$INCLUDE " + p + "\nbar\tIN\tA\t127.0.0.2"
+		var got int
+		z := NewZoneParser(strings.NewReader(zone), "", "baz/quux/db.bar")
+		z.SetIncludeAllowed(true)
+		z.SetIncludeFS(fsys)
+		for rr, ok := z.Next(); ok; _, ok = z.Next() {
+			switch rr.Header().Name {
+			case "foo.example.org.", "bar.example.org.":
+			default:
+				t.Fatalf("$INCLUDE %q: expected foo.example.org. or bar.example.org., but got %s", p, rr.Header().Name)
+			}
+			got++
+		}
+		if err := z.Err(); err != nil {
+			t.Fatalf("$INCLUDE %q: expected no error, but got %s", p, err)
+		}
+		if expected := 2; got != expected {
+			t.Errorf("$INCLUDE %q: failed to parse zone after include, expected %d records, got %d", p, expected, got)
+		}
+	}
+}
+
 func TestZoneParserIncludeDisallowed(t *testing.T) {
-	tmpfile, err := ioutil.TempFile("", "dns")
+	tmpfile, err := os.CreateTemp("", "dns")
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %s", err)
 	}
@@ -286,6 +359,15 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 	})
 }
 
+func TestParseOpenEscape(t *testing.T) {
+	if _, err := NewRR("example.net IN CNAME example.net."); err != nil {
+		t.Fatalf("expected no error, but got: %s", err)
+	}
+	if _, err := NewRR("example.net IN CNAME example.org\\"); err == nil {
+		t.Fatalf("expected an error, but got none")
+	}
+}
+
 func BenchmarkNewRR(b *testing.B) {
 	const name1 = "12345678901234567890123456789012345.12345678.123."
 	const s = name1 + " 3600 IN MX 10 " + name1
@@ -342,6 +424,34 @@ func BenchmarkZoneParser(b *testing.B) {
 
 		if err := zp.Err(); err != nil {
 			b.Fatal(err)
+		}
+	}
+}
+
+func TestEscapedStringOffset(t *testing.T) {
+	var cases = []struct {
+		input          string
+		inputOffset    int
+		expectedOffset int
+	}{
+		{"simple string with no escape sequences", 20, 20},
+		{"simple string with no escape sequences", 500, -1},
+		{`\;\088\\\;\120\\`, 0, 0},
+		{`\;\088\\\;\120\\`, 1, 2},
+		{`\;\088\\\;\120\\`, 2, 6},
+		{`\;\088\\\;\120\\`, 3, 8},
+		{`\;\088\\\;\120\\`, 4, 10},
+		{`\;\088\\\;\120\\`, 5, 14},
+		{`\;\088\\\;\120\\`, 6, 16},
+		{`\;\088\\\;\120\\`, 7, -1},
+	}
+	for i, test := range cases {
+		outputOffset := escapedStringOffset(test.input, test.inputOffset)
+		if outputOffset != test.expectedOffset {
+			t.Errorf(
+				"Test %d (input %#q offset %d) returned offset %d but expected %d",
+				i, test.input, test.inputOffset, outputOffset, test.expectedOffset,
+			)
 		}
 	}
 }
