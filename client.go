@@ -181,6 +181,12 @@ func (c *Client) ExchangeWithConnTo(m *Msg, conn *Conn, addr net.Addr) (r *Msg, 
 	return c.ExchangeWithConn(m, conn)
 }
 
+func (c *Client) ExchangeWithConnToContext(ctx context.Context, m *Msg, conn *Conn, addr net.Addr) (r *Msg, rtt time.Duration, err error) {
+	conn.UnboundUDP = true
+	conn.RemoteAddr = addr
+	return c.ExchangeWithConnContext(ctx, m, conn)
+}
+
 // END MONKEY PATCH
 
 // ExchangeWithConn has the same behavior as Exchange, just with a predetermined connection
