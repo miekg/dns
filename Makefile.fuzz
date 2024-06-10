@@ -13,11 +13,11 @@ all: build
 
 .PHONY: build
 build:
-	go-fuzz-build -tags fuzz github.com/miekg/dns
+	go-fuzz-build -tags fuzz github.com/zdns/dns
 
 .PHONY: build-newrr
 build-newrr:
-	go-fuzz-build -func FuzzNewRR -tags fuzz github.com/miekg/dns
+	go-fuzz-build -func FuzzNewRR -tags fuzz github.com/zdns/dns
 
 .PHONY: fuzz
 fuzz:
