@@ -174,6 +174,15 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 	return c.ExchangeWithConn(m, co)
 }
 
+// BEGIN MONKEY PATCH
+func (c *Client) ExchangeWithConnTo(m *Msg, conn *Conn, addr net.Addr) (r *Msg, rtt time.Duration, err error) {
+	conn.UnboundUDP = true
+	conn.RemoteAddr = addr
+	return c.ExchangeWithConn(m, conn)
+}
+
+// END MONKEY PATCH
+
 // ExchangeWithConn has the same behavior as Exchange, just with a predetermined connection
 // that will be used instead of creating a new one.
 // Usage pattern with a *dns.Client:
