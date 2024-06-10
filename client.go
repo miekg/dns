@@ -368,6 +368,7 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return 0, &Error{err: "message too large"}
 	}
 
+	// Begin Monkey Patch
 	isPacketAConnection := isPacketConn(co.Conn)
 
 	if isPacketAConnection && co.UnboundUDP {
@@ -378,8 +379,8 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return pc.WriteTo(p, co.RemoteAddr)
 	} else if isPacketAConnection {
 		return co.Conn.Write(p)
-
 	}
+	// End Monkey Patch
 
 	msg := make([]byte, 2+len(p))
 	binary.BigEndian.PutUint16(msg, uint16(len(p)))
