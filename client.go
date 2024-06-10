@@ -368,8 +368,17 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return 0, &Error{err: "message too large"}
 	}
 
-	if isPacketConn(co.Conn) {
+	isPacketAConnection := isPacketConn(co.Conn)
+
+	if isPacketAConnection && co.UnboundUDP {
+		pc, ok := co.Conn.(net.PacketConn)
+		if !ok {
+			return 0, &Error{err: "not a packet connection"}
+		}
+		return pc.WriteTo(p, co.RemoteAddr)
+	} else if isPacketAConnection {
 		return co.Conn.Write(p)
+
 	}
 
 	msg := make([]byte, 2+len(p))
