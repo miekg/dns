@@ -1,4 +1,5 @@
-//+build ignore
+//go:build ignore
+// +build ignore
 
 // msg_generate.go is meant to run with go generate. It will use
 // go/{importer,types} to track down all the RR struct types. Then for each type
@@ -170,6 +171,8 @@ if rr.%s != "-" {
 				o("off, err = packStringAny(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"octet"`:
 				o("off, err = packStringOctet(rr.%s, msg, off)\n")
+			case st.Tag(i) == `dns:"ipsechost"` || st.Tag(i) == `dns:"amtrelayhost"`:
+				o("off, err = packIPSECGateway(rr.GatewayAddr, rr.%s, msg, off, rr.GatewayType, compression, false)\n")
 			case st.Tag(i) == "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -277,6 +280,8 @@ return off, err
 				o("rr.%s, off, err = unpackStringAny(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
 			case `dns:"octet"`:
 				o("rr.%s, off, err = unpackStringOctet(msg, off)\n")
+			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
+				o("rr.GatewayAddr, rr.%s, off, err = unpackIPSECGateway(msg, off, rr.GatewayType)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -297,7 +302,7 @@ return off, err
 			}
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
-				fmt.Fprintf(b, `if off == len(msg) {
+				fmt.Fprint(b, `if off == len(msg) {
 return off, nil
 	}
 `)
@@ -322,25 +327,15 @@ return off, nil
 
 // structMember will take a tag like dns:"size-base32:SaltLength" and return the last part of this string.
 func structMember(s string) string {
-	fields := strings.Split(s, ":")
-	if len(fields) == 0 {
-		return ""
-	}
-	f := fields[len(fields)-1]
-	// f should have a closing "
-	if len(f) > 1 {
-		return f[:len(f)-1]
-	}
-	return f
+	idx := strings.LastIndex(s, ":")
+	return strings.TrimSuffix(s[idx+1:], `"`)
 }
 
 // structTag will take a tag like dns:"size-base32:SaltLength" and return base32.
 func structTag(s string) string {
-	fields := strings.Split(s, ":")
-	if len(fields) < 2 {
-		return ""
-	}
-	return fields[1][len("\"size-"):]
+	s = strings.TrimPrefix(s, `dns:"size-`)
+	s, _, _ = strings.Cut(s, ":")
+	return s
 }
 
 func fatalIfErr(err error) {

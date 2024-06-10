@@ -314,3 +314,49 @@ func TestTKEY(t *testing.T) {
 		t.Fatalf("unable to parse TKEY string: %s", newError)
 	}
 }
+
+var (
+	sinkBool   bool
+	sinkString string
+)
+
+func BenchmarkIsFQDN(b *testing.B) {
+	b.Run("no_dot", func(b *testing.B) {
+		var r bool
+		for n := 0; n < b.N; n++ {
+			r = IsFqdn("www.google.com")
+		}
+		sinkBool = r
+	})
+	b.Run("unescaped", func(b *testing.B) {
+		var r bool
+		for n := 0; n < b.N; n++ {
+			r = IsFqdn("www.google.com.")
+		}
+		sinkBool = r
+	})
+	b.Run("escaped", func(b *testing.B) {
+		var r bool
+		for n := 0; n < b.N; n++ {
+			r = IsFqdn(`www.google.com\\\\\\\\.`)
+		}
+		sinkBool = r
+	})
+}
+
+func BenchmarkFQDN(b *testing.B) {
+	b.Run("is_fqdn", func(b *testing.B) {
+		var r string
+		for n := 0; n < b.N; n++ {
+			r = Fqdn("www.google.com.")
+		}
+		sinkString = r
+	})
+	b.Run("not_fqdn", func(b *testing.B) {
+		var r string
+		for n := 0; n < b.N; n++ {
+			r = Fqdn("www.google.com")
+		}
+		sinkString = r
+	})
+}
