@@ -1,4 +1,4 @@
-module github.com/zdns/dns
+module github.com/zmap/dns
 
 go 1.19
 
