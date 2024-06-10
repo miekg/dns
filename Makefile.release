@@ -18,7 +18,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/zdns/dns"
+	"github.com/zmap/dns"
 )
 
 func main() {

@@ -61,7 +61,7 @@ func loadModule(name string) (*types.Package, error) {
 
 func main() {
 	// Import and type-check the package
-	pkg, err := loadModule("github.com/zdns/dns")
+	pkg, err := loadModule("github.com/zmap/dns")
 	fatalIfErr(err)
 	scope := pkg.Scope()
 
