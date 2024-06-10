@@ -31,7 +31,11 @@ func isPacketConn(c net.Conn) bool {
 
 // A Conn represents a connection to a DNS server.
 type Conn struct {
-	net.Conn                         // a net.Conn holding the connection
+	net.Conn // a net.Conn holding the connection
+	// BEGIN FAST UDP MONKEY PATCH
+	UnboundUDP bool
+	RemoteAddr net.Addr
+	// END FAST UDP MONKEY PATCH
 	UDPSize        uint16            // minimum receive buffer for UDP messages
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
@@ -169,6 +173,22 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 	defer co.Close()
 	return c.ExchangeWithConn(m, co)
 }
+
+// BEGIN MONKEY PATCH
+
+func (c *Client) ExchangeWithConnTo(m *Msg, conn *Conn, addr net.Addr) (r *Msg, rtt time.Duration, err error) {
+	conn.UnboundUDP = true
+	conn.RemoteAddr = addr
+	return c.ExchangeWithConn(m, conn)
+}
+
+func (c *Client) ExchangeWithConnToContext(ctx context.Context, m *Msg, conn *Conn, addr net.Addr) (r *Msg, rtt time.Duration, err error) {
+	conn.UnboundUDP = true
+	conn.RemoteAddr = addr
+	return c.ExchangeWithConnContext(ctx, m, conn)
+}
+
+// END MONKEY PATCH
 
 // ExchangeWithConn has the same behavior as Exchange, just with a predetermined connection
 // that will be used instead of creating a new one.
@@ -355,9 +375,19 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return 0, &Error{err: "message too large"}
 	}
 
-	if isPacketConn(co.Conn) {
+	// Begin Monkey Patch
+	isPacketAConnection := isPacketConn(co.Conn)
+
+	if isPacketAConnection && co.UnboundUDP {
+		pc, ok := co.Conn.(net.PacketConn)
+		if !ok {
+			return 0, &Error{err: "not a packet connection"}
+		}
+		return pc.WriteTo(p, co.RemoteAddr)
+	} else if isPacketAConnection {
 		return co.Conn.Write(p)
 	}
+	// End Monkey Patch
 
 	msg := make([]byte, 2+len(p))
 	binary.BigEndian.PutUint16(msg, uint16(len(p)))
