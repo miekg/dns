@@ -175,6 +175,7 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 }
 
 // BEGIN MONKEY PATCH
+
 func (c *Client) ExchangeWithConnTo(m *Msg, conn *Conn, addr net.Addr) (r *Msg, rtt time.Duration, err error) {
 	conn.UnboundUDP = true
 	conn.RemoteAddr = addr
