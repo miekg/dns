@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: miekg/dns
-          path: miekg-dns
+#          path: miekg-dns
 
       - name: Get the most recent version tag from miekg/dns
         id: get-latest-tag
@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: zmap/dns
-          path: zmap-dns
+#          path: zmap-dns
 
       - name: Check if the latest tag exists in zmap/dns
         id: check-tag
