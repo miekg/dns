@@ -19,8 +19,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: miekg/dns
-#          path: miekg-dns
+          path: miekg-dns
 
+      - name: ls
+        run: |
+          ls -l
       - name: Get the most recent version tag from miekg/dns
         id: get-latest-tag
         run: |
