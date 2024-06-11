@@ -8,74 +8,38 @@ on:
     - cron: '0 0 * * *' # This will run the action daily
   workflow_dispatch: # Allows manual trigger
 
+
 jobs:
-  sync:
+  sync-fork:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     steps:
-      - name: Checkout miekg/dns
+      - name: Check out code
         uses: actions/checkout@v2
-        with:
-          repository: miekg/dns
-          path: ./miekg-dns
 
-      - name: ls
+      - name: Set up Git user name and email
         run: |
-          ls -l
-      - name: Get the most recent version tag from miekg/dns
-        id: get-latest-tag
-        run: |
-          ls -l
-          cd miekg-dns
-          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
 
-      - name: Discard miekg/dns
-        run: |
-          rm -rf miekg-dns
+      - name: Fetch upstream changes
+        run: git fetch upstream
 
-      - name: Checkout zmap/dns
-        uses: actions/checkout@v2
-        with:
-          repository: zmap/dns
-#          path: zmap-dns
-
-      - name: Check if the latest tag exists in zmap/dns
-        id: check-tag
+      - name: Check for changes
+        id: check-changes
         run: |
-          cd zmap-dns
-          if git rev-parse "$LATEST_TAG" >/dev/null 2>&1
-          then
-            echo "Tag $LATEST_TAG exists in zmap/dns. Exiting."
-            exit 0
+          BASE=$(git merge-base HEAD upstream/main)
+          if [ $(git rev-list --count HEAD..upstream/main) -gt 0 ]; then
+            echo "::set-output name=changes::true"
           else
-            echo "Tag $LATEST_TAG does not exist in zmap/dns. Proceeding."
+            echo "::set-output name=changes::false"
           fi
 
-      - name: Create a new branch for the PR
+      - name: Create pull request
+        if: steps.check-changes.outputs.changes == 'true'
         run: |
-          cd zmap-dns
-          git checkout -b sync-from-miekg-dns
-
-      - name: Merge changes from miekg/dns into zmap/dns
-        run: |
-          cd zmap-dns
-          git remote add miekg https://github.com/miekg/dns.git
-          git fetch miekg
-          git merge miekg/master
-
-      - name: Push changes to the new branch
-        run: |
-          cd zmap-dns
-          git push origin sync-from-miekg-dns
-
-      - name: Create a pull request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'Sync latest changes from miekg/dns'
-          branch: sync-from-miekg-dns
-          title: 'Sync latest changes from miekg/dns'
-          body: 'This PR merges the latest changes from miekg/dns into zmap/dns.'
+          git checkout -b sync-$(date +'%Y-%m-%d')
+          git merge upstream/main --no-edit
+          git push origin sync-$(date +'%Y-%m-%d')
+          gh pr create --title "Sync with upstream" --body "Automated PR to sync with upstream." --base main --head sync-$(date +'%Y-%m-%d\nDon't forget to tag the new version so it is picked up by users')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
