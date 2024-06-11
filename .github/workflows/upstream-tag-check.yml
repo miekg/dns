@@ -22,13 +22,15 @@ jobs:
           git config --global user.email 'actions@github.com'
 
       - name: Fetch upstream changes
-        run: git fetch upstream
+        run: |
+          git remote add upstream https://github.com/miekg/dns.git     
+          git fetch upstream
 
       - name: Check for changes
         id: check-changes
         run: |
-          BASE=$(git merge-base HEAD upstream/main)
-          if [ $(git rev-list --count HEAD..upstream/main) -gt 0 ]; then
+          BASE=$(git merge-base HEAD upstream/master)
+          if [ $(git rev-list --count HEAD..upstream/master) -gt 0 ]; then
             echo "::set-output name=changes::true"
           else
             echo "::set-output name=changes::false"
@@ -38,8 +40,8 @@ jobs:
         if: steps.check-changes.outputs.changes == 'true'
         run: |
           git checkout -b sync-$(date +'%Y-%m-%d')
-          git merge upstream/main --no-edit
+          git merge upstream/master --no-edit
           git push origin sync-$(date +'%Y-%m-%d')
-          gh pr create --title "Sync with upstream" --body "Automated PR to sync with upstream." --base main --head sync-$(date +'%Y-%m-%d\nDon't forget to tag the new version so it is picked up by users')
+          gh pr create --title "Sync with upstream" --body "Automated PR to sync with upstream." --base master --head sync-$(date +'%Y-%m-%d\nDon't forget to tag the new version so it is picked up by users')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
