@@ -3,7 +3,7 @@ name: Sync miekg/dns with zmap/dns
 on:
   # Only for testing
   pull_request:
-    branches: [github-action-when-upstream-tagged]
+#    branches: [github-action-when-upstream-tagged]
   schedule:
     - cron: '0 0 * * *' # This will run the action daily
   workflow_dispatch: # Allows manual trigger
