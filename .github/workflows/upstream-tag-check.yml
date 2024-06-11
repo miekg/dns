@@ -1,0 +1,74 @@
+name: Sync miekg/dns with zmap/dns
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # This will run the action daily
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout miekg/dns
+        uses: actions/checkout@v2
+        with:
+          repository: miekg/dns
+          path: miekg-dns
+
+      - name: Get the most recent version tag from miekg/dns
+        id: get-latest-tag
+        run: |
+          cd miekg-dns
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+      - name: Discard miekg/dns
+        run: |
+          rm -rf miekg-dns
+
+      - name: Checkout zmap/dns
+        uses: actions/checkout@v2
+        with:
+          repository: zmap/dns
+          path: zmap-dns
+
+      - name: Check if the latest tag exists in zmap/dns
+        id: check-tag
+        run: |
+          cd zmap-dns
+          if git rev-parse "$LATEST_TAG" >/dev/null 2>&1
+          then
+            echo "Tag $LATEST_TAG exists in zmap/dns. Exiting."
+            exit 0
+          else
+            echo "Tag $LATEST_TAG does not exist in zmap/dns. Proceeding."
+          fi
+
+      - name: Create a new branch for the PR
+        run: |
+          cd zmap-dns
+          git checkout -b sync-from-miekg-dns
+
+      - name: Merge changes from miekg/dns into zmap/dns
+        run: |
+          cd zmap-dns
+          git remote add miekg https://github.com/miekg/dns.git
+          git fetch miekg
+          git merge miekg/master
+
+      - name: Push changes to the new branch
+        run: |
+          cd zmap-dns
+          git push origin sync-from-miekg-dns
+
+      - name: Create a pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'Sync latest changes from miekg/dns'
+          branch: sync-from-miekg-dns
+          title: 'Sync latest changes from miekg/dns'
+          body: 'This PR merges the latest changes from miekg/dns into zmap/dns.'
