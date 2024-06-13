@@ -188,11 +188,11 @@ type DecorateReader func(Reader) Reader
 // Implementations should never return a nil Writer.
 type DecorateWriter func(Writer) Writer
 
-// InvalidMsgFunc is a listener hook for observing incoming messages that were discarded
+// MsgInvalidFunc is a listener hook for observing incoming messages that were discarded
 // because they could not be parsed.
 // Every message that is read by a Reader will eventually be provided to the Handler,
 // rejected (or ignored) by the MsgAcceptFunc, or passed to this function.
-type InvalidMsgFunc func(m []byte, err error)
+type MsgInvalidFunc func(m []byte, err error)
 
 func DefaultMsgInvalidFunc(m []byte, err error) {}
 
@@ -242,7 +242,7 @@ type Server struct {
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
 	// MsgInvalidFunc is optional, will be called if a message is received but cannot be parsed.
-	MsgInvalidFunc InvalidMsgFunc
+	MsgInvalidFunc MsgInvalidFunc
 
 	// Shutdown handling
 	lock     sync.RWMutex
