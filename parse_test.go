@@ -1609,7 +1609,18 @@ func TestParseSVCB(t *testing.T) {
 		// From draft-ietf-add-ddr-06
 		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns-query{?dns}`:     `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
 		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns\045query{\?dns}`: `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
+		// From RFC9461 Section 7 (https://datatracker.ietf.org/doc/html/rfc9461#section-7)
+		`_dns.simple.example. 7200 IN SVCB 1 simple.example. alpn=dot`:                                 `_dns.simple.example.	7200	IN	SVCB	1 simple.example. alpn="dot"`,
+		`_dns.doh.example. 7200 IN SVCB 1 doh.example. alpn=h2 dohpath=/dns-query{?dns}`:               `_dns.doh.example.	7200	IN	SVCB	1 doh.example. alpn="h2" dohpath="/dns-query{?dns}"`,
+		`_dns.resolver.example.  7200 IN SVCB 1 resolver.example. alpn=dot,doq,h2,h3 dohpath=/q{?dns}`: `_dns.resolver.example.	7200	IN	SVCB	1 resolver.example. alpn="dot,doq,h2,h3" dohpath="/q{?dns}"`,
+		`_dns.resolver.example.  7200 IN SVCB 2 resolver.example. alpn=dot port=8530`:                  `_dns.resolver.example.	7200	IN	SVCB	2 resolver.example. alpn="dot" port="8530"`,
+		// From RFC 9540 Section 4.2.1 (https://www.rfc-editor.org/rfc/rfc9540.html#name-the-ohttp-svcparamkey)
+		`_dns.resolver.arpa  7200  IN SVCB 1 doh.example.net alpn=h2 dohpath=/dns-query{?dns} ohttp`: `_dns.resolver.arpa.	7200	IN	SVCB	1 doh.example.net. alpn="h2" dohpath="/dns-query{?dns}" ohttp=""`,
+		// From RFC 9540 Section 4.1 (HTTPS RR) (https://www.rfc-editor.org/rfc/rfc9540.html#name-use-in-https-service-rrs)
+		`svc.example.com. 7200  IN HTTPS 1 . alpn=h2 ohttp`:         `svc.example.com.	7200	IN	HTTPS	1 . alpn="h2" ohttp=""`,
+		`svc.example.com. 7200  IN HTTPS 1 . mandatory=ohttp ohttp`: `svc.example.com.	7200	IN	HTTPS	1 . mandatory="ohttp" ohttp=""`,
 	}
+
 	for s, o := range svcbs {
 		rr, err := NewRR(s)
 		if err != nil {
