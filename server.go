@@ -194,7 +194,7 @@ type DecorateWriter func(Writer) Writer
 // rejected (or ignored) by the MsgAcceptFunc, or passed to this function.
 type InvalidMsgFunc func(m []byte, err error)
 
-func DefaultInvalidMsgFunc(m []byte, err error) {}
+func DefaultMsgInvalidFunc(m []byte, err error) {}
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
@@ -241,8 +241,8 @@ type Server struct {
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
-	// InvalidMsgFunc is optional, will be called if a message is received but cannot be parsed.
-	InvalidMsgFunc InvalidMsgFunc
+	// MsgInvalidFunc is optional, will be called if a message is received but cannot be parsed.
+	MsgInvalidFunc InvalidMsgFunc
 
 	// Shutdown handling
 	lock     sync.RWMutex
@@ -287,8 +287,8 @@ func (srv *Server) init() {
 	if srv.MsgAcceptFunc == nil {
 		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
-	if srv.InvalidMsgFunc == nil {
-		srv.InvalidMsgFunc = DefaultInvalidMsgFunc
+	if srv.MsgInvalidFunc == nil {
+		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
@@ -544,7 +544,7 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			if cap(m) == srv.UDPSize {
 				srv.udpPool.Put(m[:srv.UDPSize])
 			}
-			srv.InvalidMsgFunc(m, ErrShortRead)
+			srv.MsgInvalidFunc(m, ErrShortRead)
 			continue
 		}
 		wg.Add(1)
@@ -625,7 +625,7 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 func (srv *Server) serveDNS(m []byte, w *response) {
 	dh, off, err := unpackMsgHdr(m, 0)
 	if err != nil {
-		srv.InvalidMsgFunc(m, err)
+		srv.MsgInvalidFunc(m, err)
 		// Let client hang, they are sending crap; any reply can be used to amplify.
 		return
 	}
@@ -640,7 +640,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 			break
 		}
 
-		srv.InvalidMsgFunc(m, err)
+		srv.MsgInvalidFunc(m, err)
 		fallthrough
 	case MsgReject, MsgRejectNotImplemented:
 		opcode := req.Opcode

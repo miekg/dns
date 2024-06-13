@@ -63,7 +63,7 @@ func TestInvalidMsg(t *testing.T) {
 	}
 
 	invalidErrors := make(chan error)
-	s.InvalidMsgFunc = func(m []byte, err error) {
+	s.MsgInvalidFunc = func(m []byte, err error) {
 		invalidErrors <- err
 	}
 
