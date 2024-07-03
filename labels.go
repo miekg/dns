@@ -61,20 +61,18 @@ func CompareDomainName(s1, s2 string) (n int) {
 	i2 := len(l2) - 2
 	// the second check can be done here: last/only label
 	// before we fall through into the for-loop below
-	if equal(s1[l1[j1]:], s2[l2[j2]:]) {
-		n++
-	} else {
+	if !equal(s1[l1[j1]:], s2[l2[j2]:]) {
 		return
 	}
+	n++
 	for {
 		if i1 < 0 || i2 < 0 {
 			break
 		}
-		if equal(s1[l1[i1]:l1[j1]], s2[l2[i2]:l2[j2]]) {
-			n++
-		} else {
+		if !equal(s1[l1[i1]:l1[j1]], s2[l2[i2]:l2[j2]]) {
 			break
 		}
+		n++
 		j1--
 		i1--
 		j2--
@@ -186,16 +184,55 @@ func PrevLabel(s string, n int) (i int, start bool) {
 	return 0, n > 1
 }
 
-// equal compares a and b while ignoring case. It returns true when equal otherwise false.
-func equal(a, b string) bool {
-	// might be lifted into API function.
+// Compare compares domains according to the canonical ordering specified in RFC4034
+// returns an integer value similar to strcmp
+// (0 for equal values, -1 if s1 < s2, 1 if s1 > s2)
+func Compare(s1, s2 string) int {
+	s1b := doDDD([]byte(s1))
+	s2b := doDDD([]byte(s2))
+
+	s1 = string(s1b)
+	s2 = string(s2b)
+
+	s1lend := len(s1)
+	s2lend := len(s2)
+
+	for i := 0; ; i++ {
+		s1lstart, end1 := PrevLabel(s1, i)
+		s2lstart, end2 := PrevLabel(s2, i)
+
+		if end1 && end2 {
+			return 0
+		}
+
+		s1l := string(s1b[s1lstart:s1lend])
+		s2l := string(s2b[s2lstart:s2lend])
+
+		if cmp := labelCompare(s1l, s2l); cmp != 0 {
+			return cmp
+		}
+
+		s1lend = s1lstart - 1
+		s2lend = s2lstart - 1
+		if s1lend == -1 {
+			s1lend = 0
+		}
+		if s2lend == -1 {
+			s2lend = 0
+		}
+	}
+}
+
+// essentially strcasecmp
+// (0 for equal values, -1 if s1 < s2, 1 if s1 > s2)
+func labelCompare(a, b string) int {
 	la := len(a)
 	lb := len(b)
-	if la != lb {
-		return false
+	minLen := la
+	if lb < la {
+		minLen = lb
 	}
-
-	for i := la - 1; i >= 0; i-- {
+	for i := 0; i < minLen; i++ {
 		ai := a[i]
 		bi := b[i]
 		if ai >= 'A' && ai <= 'Z' {
@@ -205,8 +242,41 @@ func equal(a, b string) bool {
 			bi |= 'a' - 'A'
 		}
 		if ai != bi {
-			return false
+			if ai > bi {
+				return 1
+			}
+			return -1
 		}
 	}
-	return true
+
+	if la > lb {
+		return 1
+	} else if la < lb {
+		return -1
+	}
+	return 0
+}
+
+// equal compares a and b while ignoring case. It returns true when equal otherwise false.
+func equal(a, b string) bool {
+	// might be lifted into API function.
+	if len(a) != len(b) {
+		return false
+	}
+
+	return labelCompare(a, b) == 0
+}
+
+func doDDD(b []byte) []byte {
+	lb := len(b)
+	for i := 0; i < lb; i++ {
+		if i+3 < lb && b[i] == '\\' && isDigit(b[i+1]) && isDigit(b[i+2]) && isDigit(b[i+3]) {
+			b[i] = dddToByte(b[i+1 : i+4])
+			for j := i + 1; j < lb-3; j++ {
+				b[j] = b[j+3]
+			}
+			lb -= 3
+		}
+	}
+	return b[:lb]
 }
