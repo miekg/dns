@@ -260,7 +260,17 @@ func IsDomainName(s string) (labels int, ok bool) {
 // are the same domain true is returned as well.
 func IsSubDomain(parent, child string) bool {
 	// Entire child is contained in parent
-	return CompareDomainName(parent, child) == CountLabel(parent)
+	if parent == "." {
+		return true
+	}
+	lz, lq := len(parent), len(child)
+	if lz > lq {
+		return false
+	}
+	if lz < lq && child[lq-lz-1] != '.' {
+		return false
+	}
+	return strings.EqualFold(child[lq-lz:], parent)
 }
 
 // IsMsg sanity checks buf and returns an error if it isn't a valid DNS packet.
