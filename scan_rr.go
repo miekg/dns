@@ -1212,7 +1212,7 @@ func (rr *SSHFP) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
-func (rr *DNSKEY) parseDNSKEY(c *zlexer, o, typ string) *ParseError {
+func (rr *DNSKEY) parseDNSKEY(c *zlexer, _, typ string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)
 	if e != nil || l.err {
@@ -1430,7 +1430,7 @@ func (rr *GPOS) parse(c *zlexer, o string) *ParseError {
 	return slurpRemainder(c)
 }
 
-func (rr *DS) parseDS(c *zlexer, o, typ string) *ParseError {
+func (rr *DS) parseDS(c *zlexer, _, typ string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)
 	if e != nil || l.err {
