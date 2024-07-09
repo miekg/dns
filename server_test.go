@@ -17,6 +17,9 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Assert that the response exposes the underlying connections.
+var _ ExposesUnderlyingConns = &response{}
+
 func HelloServer(w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)

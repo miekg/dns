@@ -79,6 +79,26 @@ type response struct {
 	writer         Writer         // writer to output the raw DNS bits
 }
 
+// IncomingConn exposes the underlying TCP connection, if it is used.
+// For UDP connections, it returns nil.
+func (r *response) IncomingConn() net.Conn {
+	return r.tcp
+}
+
+// IncomingPacketConn exposes the underlying UDP connection, if it is used.
+// For TCP connections, it returns nil.
+func (r *response) IncomingPacketConn() net.PacketConn {
+	return r.udp
+}
+
+// The ExposesUnderlyingConns interface is used by a DNS Handler to access underlying connections.
+type ExposesUnderlyingConns interface {
+	// IncomingConn is only valid for TCP connections. It is otherwise nil.
+	IncomingConn() net.Conn
+	// IncomingPackageConn is only valid for UDP connections. It is otherwise nil.
+	IncomingPacketConn() net.PacketConn
+}
+
 // handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
 func handleRefused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
