@@ -1123,14 +1123,14 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 	)
 	q.Name, off, err = UnpackDomainName(msg, off)
 	if err != nil {
-		return q, off, err
+		return q, off, fmt.Errorf("question.Name: %w", err)
 	}
 	if off == len(msg) {
 		return q, off, nil
 	}
 	q.Qtype, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return q, off, err
+		return q, off, fmt.Errorf("question.Qtype: %w", err)
 	}
 	if off == len(msg) {
 		return q, off, nil
@@ -1139,7 +1139,7 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 	if off == len(msg) {
 		return q, off, nil
 	}
-	return q, off, err
+	return q, off, fmt.Errorf("question.Qclass: %w", err)
 }
 
 func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
@@ -1177,27 +1177,27 @@ func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
 	)
 	dh.Id, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, err
+		return dh, off, fmt.Errorf("header.Id: %w", err)
 	}
 	dh.Bits, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, err
+		return dh, off, fmt.Errorf("header.Bits: %w", err)
 	}
 	dh.Qdcount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, err
+		return dh, off, fmt.Errorf("header.Qdcount: %w", err)
 	}
 	dh.Ancount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, err
+		return dh, off, fmt.Errorf("header.Ancount: %w", err)
 	}
 	dh.Nscount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, err
+		return dh, off, fmt.Errorf("header.Nscount: %w", err)
 	}
 	dh.Arcount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, err
+		return dh, off, fmt.Errorf("header.Arcount: %w", err)
 	}
 	return dh, off, nil
 }
