@@ -19,11 +19,12 @@ const (
 	EDNS0DHU          = 0x6     // DS Hash Understood
 	EDNS0N3U          = 0x7     // NSEC3 Hash Understood
 	EDNS0SUBNET       = 0x8     // client-subnet (See RFC 7871)
-	EDNS0EXPIRE       = 0x9     // EDNS0 expire
+	EDNS0EXPIRE       = 0x9     // EDNS0 Expire
 	EDNS0COOKIE       = 0xa     // EDNS0 Cookie
-	EDNS0TCPKEEPALIVE = 0xb     // EDNS0 tcp keep alive (See RFC 7828)
-	EDNS0PADDING      = 0xc     // EDNS0 padding (See RFC 7830)
-	EDNS0EDE          = 0xf     // EDNS0 extended DNS errors (See RFC 8914)
+	EDNS0TCPKEEPALIVE = 0xb     // EDNS0 TCP keep alive (See RFC 7828)
+	EDNS0PADDING      = 0xc     // EDNS0 Padding (See RFC 7830)
+	EDNS0EDE          = 0xf     // EDNS0 Extended DNS Errors (See RFC 8914)
+	EDNS0ZONEVERSION  = 0x000   // EDNS0 Zone Version (See RFC ...) https://www.ietf.org/archive/id/draft-ietf-dnsop-zoneversion-11.html
 	EDNS0LOCALSTART   = 0xFDE9  // Beginning of range reserved for local/experimental use (See RFC 6891)
 	EDNS0LOCALEND     = 0xFFFE  // End of range reserved for local/experimental use (See RFC 6891)
 	_DO               = 1 << 15 // DNSSEC OK
@@ -59,6 +60,8 @@ func makeDataOpt(code uint16) EDNS0 {
 		return new(EDNS0_EDE)
 	case EDNS0ESU:
 		return &EDNS0_ESU{Code: EDNS0ESU}
+	case EDNS0ZONEVERSION:
+		return &EDNS0_ZONEVERSION{Code: EDNS0_ZONEVERSION}
 	default:
 		e := new(EDNS0_LOCAL)
 		e.Code = code
@@ -839,7 +842,7 @@ func (e *EDNS0_EDE) unpack(b []byte) error {
 	return nil
 }
 
-// The EDNS0_ESU option for ENUM Source-URI Extension
+// The EDNS0_ESU option for ENUM Source-URI Extension.
 type EDNS0_ESU struct {
 	Code uint16
 	Uri  string
@@ -853,4 +856,18 @@ func (e *EDNS0_ESU) pack() ([]byte, error) { return []byte(e.Uri), nil }
 func (e *EDNS0_ESU) unpack(b []byte) error {
 	e.Uri = string(b)
 	return nil
+}
+
+// The EDNS0_ZONEVERSION option is used to returns a unique version for this zone. See RFC xxxx.
+type EDNS0_ZONEVERSION struct {
+	Code uint16 // Always EDNSTCPKEEPALIVE
+
+	// Timeout is an idle timeout value for the TCP connection, specified in
+	// units of 100 milliseconds, encoded in network byte order. If set to 0,
+	// pack will return a nil slice.
+	Timeout uint16
+
+	// Length is the option's length.
+	// Deprecated: this field is deprecated and is always equal to 0.
+	Length uint16
 }
