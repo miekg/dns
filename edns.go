@@ -61,7 +61,7 @@ func makeDataOpt(code uint16) EDNS0 {
 	case EDNS0ESU:
 		return &EDNS0_ESU{Code: EDNS0ESU}
 	case EDNS0ZONEVERSION:
-		return &EDNS0_ZONEVERSION{Code: EDNS0_ZONEVERSION}
+		return &EDNS0_ZONEVERSION{}
 	default:
 		e := new(EDNS0_LOCAL)
 		e.Code = code
@@ -860,14 +860,7 @@ func (e *EDNS0_ESU) unpack(b []byte) error {
 
 // The EDNS0_ZONEVERSION option is used to returns a unique version for this zone. See RFC xxxx.
 type EDNS0_ZONEVERSION struct {
-	Code uint16 // Always EDNSTCPKEEPALIVE
-
-	// Timeout is an idle timeout value for the TCP connection, specified in
-	// units of 100 milliseconds, encoded in network byte order. If set to 0,
-	// pack will return a nil slice.
-	Timeout uint16
-
-	// Length is the option's length.
-	// Deprecated: this field is deprecated and is always equal to 0.
-	Length uint16
+	LabelCount uint8
+	Type       uint8
+	Version    string
 }
