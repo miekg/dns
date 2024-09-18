@@ -57,7 +57,7 @@ func TestSVCB(t *testing.T) {
 			continue
 		}
 		if str := kv.String(); str != o.data {
-			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", o.key, o.data, str)
+			t.Errorf("`%s` should be equal to\n`%s`, but is     `%s`", o.key, o.data, str)
 		}
 	}
 }
