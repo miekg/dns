@@ -93,3 +93,8 @@ func (rr *NSEC3) Match(name string) bool {
 	}
 	return false
 }
+
+// Match returns true if the given name is covered by the NSEC record
+func (rr *NSEC) Cover(name string) bool {
+	return Compare(rr.Hdr.Name, name) <= 0 && Compare(name, rr.NextDomain) == -1
+}
