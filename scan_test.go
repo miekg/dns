@@ -433,24 +433,36 @@ func TestEscapedStringOffset(t *testing.T) {
 		input          string
 		inputOffset    int
 		expectedOffset int
+		expectedOK     bool
 	}{
-		{"simple string with no escape sequences", 20, 20},
-		{"simple string with no escape sequences", 500, -1},
-		{`\;\088\\\;\120\\`, 0, 0},
-		{`\;\088\\\;\120\\`, 1, 2},
-		{`\;\088\\\;\120\\`, 2, 6},
-		{`\;\088\\\;\120\\`, 3, 8},
-		{`\;\088\\\;\120\\`, 4, 10},
-		{`\;\088\\\;\120\\`, 5, 14},
-		{`\;\088\\\;\120\\`, 6, 16},
-		{`\;\088\\\;\120\\`, 7, -1},
+		{"simple string with no escape sequences", 20, 20, true},
+		{"simple string with no escape sequences", 500, -1, true},
+		{`\;\088\\\;\120\\`, 0, 0, true},
+		{`\;\088\\\;\120\\`, 1, 2, true},
+		{`\;\088\\\;\120\\`, 2, 6, true},
+		{`\;\088\\\;\120\\`, 3, 8, true},
+		{`\;\088\\\;\120\\`, 4, 10, true},
+		{`\;\088\\\;\120\\`, 5, 14, true},
+		{`\;\088\\\;\120\\`, 6, 16, true},
+		{`\;\088\\\;\120\\`, 7, -1, true},
+		{`\`, 3, 0, false},
+		{`a\`, 3, 0, false},
+		{`aa\`, 3, 0, false},
+		{`aaa\`, 3, 3, true},
+		{`aaaa\`, 3, 3, true},
 	}
 	for i, test := range cases {
-		outputOffset := escapedStringOffset(test.input, test.inputOffset)
+		outputOffset, outputOK := escapedStringOffset(test.input, test.inputOffset)
 		if outputOffset != test.expectedOffset {
 			t.Errorf(
 				"Test %d (input %#q offset %d) returned offset %d but expected %d",
 				i, test.input, test.inputOffset, outputOffset, test.expectedOffset,
+			)
+		}
+		if outputOK != test.expectedOK {
+			t.Errorf(
+				"Test %d (input %#q offset %d) returned ok=%t but expected %t",
+				i, test.input, test.inputOffset, outputOK, test.expectedOK,
 			)
 		}
 	}
