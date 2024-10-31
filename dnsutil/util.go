@@ -8,7 +8,7 @@ package dnsutil
 import (
 	"strings"
 
-	"github.com/zmap/dns"
+	"github.com/miekg/dns"
 )
 
 // AddOrigin adds origin to s if s is not already a FQDN.
