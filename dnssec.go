@@ -376,7 +376,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	}
 
 	signerName := CanonicalName(rr.SignerName)
-	if !strings.EqualFold(signerName, k.Hdr.Name) {
+	if !equal(signerName, k.Hdr.Name) {
 		return ErrKey
 	}
 
@@ -400,8 +400,8 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	if h0 := rrset[0].Header(); h0.Class != rr.Hdr.Class ||
 		h0.Rrtype != rr.TypeCovered ||
 		uint8(CountLabel(h0.Name)) < rr.Labels ||
-		!strings.EqualFold(h0.Name, rr.Hdr.Name) ||
-		!strings.HasSuffix(h0.Name, signerName) {
+		!equal(h0.Name, rr.Hdr.Name) ||
+		!strings.HasSuffix(CanonicalName(h0.Name), signerName) {
 
 		return ErrRRset
 	}
