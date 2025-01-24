@@ -185,6 +185,8 @@ func IsDomainName(s string) (labels int, ok bool) {
 
 	const lenmsg = 256
 
+	s = strings.TrimSpace(s)
+
 	if len(s) == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return 0, false
 	}

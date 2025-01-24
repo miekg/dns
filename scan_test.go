@@ -226,6 +226,19 @@ func TestZoneParserAddressAAAA(t *testing.T) {
 	}
 }
 
+func TestZoneParserCnameBad(t *testing.T) {
+	records := []string{
+		"1.bad.example.org. CNAME    ; bad cname",
+	}
+
+	for _, record := range records {
+		const expect = "bad CNAME"
+		if got, err := NewRR(record); err == nil || !strings.Contains(err.Error(), expect) {
+			t.Errorf("NewRR(%v) = %v, want err to contain %q", record, got, expect)
+		}
+	}
+}
+
 func TestZoneParserAddressBad(t *testing.T) {
 	records := []string{
 		"1.bad.example.org. 600 IN A ::1",
