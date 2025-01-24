@@ -155,6 +155,117 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
+// Test if RRSIG.Verify() conforms to RFC 4035 Section 5.3.1
+func TestShouldNotVerifyInvalidSig(t *testing.T) {
+	// The RRSIG RR and the RRset MUST have the same owner name
+	rrNameMismatch := getSoa()
+	rrNameMismatch.Hdr.Name = "example.com."
+
+	// ... and the same class
+	rrClassMismatch := getSoa()
+	rrClassMismatch.Hdr.Class = ClassCHAOS
+
+	// The RRSIG RR's Type Covered field MUST equal the RRset's type.
+	rrTypeMismatch := getSoa()
+	rrTypeMismatch.Hdr.Rrtype = TypeA
+
+	// The number of labels in the RRset owner name MUST be greater than
+	// or equal to the value in the RRSIG RR's Labels field.
+	rrLabelLessThan := getSoa()
+	rrLabelLessThan.Hdr.Name = "nl."
+
+	// Time checks are done in ValidityPeriod
+
+	// With this key
+	key := new(DNSKEY)
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = RSASHA256
+	privkey, _ := key.Generate(512)
+
+	normalSoa := getSoa()
+
+	// Fill in the normal values of the Sig, before signing
+	sig := new(RRSIG)
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.TypeCovered = TypeSOA
+	sig.Labels = uint8(CountLabel(normalSoa.Hdr.Name))
+	sig.OrigTtl = normalSoa.Hdr.Ttl
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.KeyTag = key.KeyTag()   // Get the keyfrom the Key
+	sig.SignerName = key.Hdr.Name
+	sig.Algorithm = RSASHA256
+
+	for i, rr := range []RR{rrNameMismatch, rrClassMismatch, rrTypeMismatch, rrLabelLessThan} {
+		if i != 0 { // Just for the rrNameMismatch case, we need the name to mismatch
+			sig := sig.copy().(*RRSIG)
+			sig.SignerName = rr.Header().Name
+			sig.Hdr.Name = rr.Header().Name
+			key := key.copy().(*DNSKEY)
+			key.Hdr.Name = rr.Header().Name
+		}
+
+		if err := sig.signAsIs(privkey.(*rsa.PrivateKey), []RR{rr}); err != nil {
+			t.Error("failure to sign the record:", err)
+			continue
+		}
+
+		if err := sig.Verify(key, []RR{rr}); err == nil {
+			t.Error("should not validate: ", rr)
+			continue
+		} else {
+			t.Logf("expected failure: %v for RR name %s, class %d, type %d, rrsig labels %d", err, rr.Header().Name, rr.Header().Class, rr.Header().Rrtype, CountLabel(rr.Header().Name))
+		}
+	}
+
+	// The RRSIG RR's Signer's Name field MUST be the name of the zone that contains the RRset.
+	// The RRSIG RR's Signer's Name, Algorithm, and Key Tag fields MUST match the owner name,
+	// algorithm, and key tag for some DNSKEY RR in the zone's apex DNSKEY RRset.
+	sigMismatchName := sig.copy().(*RRSIG)
+	sigMismatchName.SignerName = "example.com."
+	soaMismatchName := getSoa()
+	soaMismatchName.Hdr.Name = "example.com."
+	keyMismatchName := key.copy().(*DNSKEY)
+	keyMismatchName.Hdr.Name = "example.com."
+	if err := sigMismatchName.signAsIs(privkey.(*rsa.PrivateKey), []RR{soaMismatchName}); err != nil {
+		t.Error("failure to sign the record:", err)
+	} else if err := sigMismatchName.Verify(keyMismatchName, []RR{soaMismatchName}); err == nil {
+		t.Error("should not validate: ", soaMismatchName, ", RRSIG's signer's name does not match the owner name")
+	} else {
+		t.Logf("expected failure: %v for signer %s and owner %s", err, sigMismatchName.SignerName, sigMismatchName.Hdr.Name)
+	}
+
+	sigMismatchAlgo := sig.copy().(*RRSIG)
+	sigMismatchAlgo.Algorithm = RSASHA1
+	sigMismatchKeyTag := sig.copy().(*RRSIG)
+	sigMismatchKeyTag.KeyTag = 12345
+	for _, sigMismatch := range []*RRSIG{sigMismatchAlgo, sigMismatchKeyTag} {
+		if err := sigMismatch.Sign(privkey.(*rsa.PrivateKey), []RR{normalSoa}); err != nil {
+			t.Error("failure to sign the record:", err)
+		} else if err := sigMismatch.Verify(key, []RR{normalSoa}); err == nil {
+			t.Error("should not validate: ", normalSoa)
+		} else {
+			t.Logf("expected failure: %v for signer %s algo %d keytag %d", err, sigMismatch.SignerName, sigMismatch.Algorithm, sigMismatch.KeyTag)
+		}
+	}
+
+	// The matching DNSKEY RR MUST have the Zone Flag bit (DNSKEY RDATA Flag bit 7) set.
+	keyZoneBitWrong := key.copy().(*DNSKEY)
+	keyZoneBitWrong.Flags = key.Flags &^ ZONE
+	if err := sig.Sign(privkey.(*rsa.PrivateKey), []RR{normalSoa}); err != nil {
+		t.Error("failure to sign the record:", err)
+	} else if err := sig.Verify(keyZoneBitWrong, []RR{normalSoa}); err == nil {
+		t.Error("should not validate: ", normalSoa)
+	} else {
+		t.Logf("expected failure: %v for key flags %d", err, keyZoneBitWrong.Flags)
+	}
+}
+
 func Test65534(t *testing.T) {
 	t6 := new(RFC3597)
 	t6.Hdr = RR_Header{"miek.nl.", 65534, ClassINET, 14400, 0}
