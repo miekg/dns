@@ -1,0 +1,48 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream https://github.com/miekg/dns.git
+          git fetch upstream
+
+      - name: Check for new changes
+        id: check_updates
+        run: |
+          UPDATES=$(git rev-list --count HEAD..upstream/master)
+          if [ "$UPDATES" -gt 0 ]; then
+            echo "There are $UPDATES new upstream changes available."
+            echo "updates_available=true" >> $GITHUB_ENV
+          else
+            echo "There are no new upstream changes available."
+            echo "updates_available=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create Sync Branch
+        if: env.updates_available == 'true'
+        # Merge upstream changes, preferring upstream changes in case of conflicts. This way we can resolve conflicts with master during the PR review process.
+        run: |
+          echo "Merging upstream changes"
+          git merge --no-edit --strategy-option=theirs upstream/master || (git merge --abort && echo "merging was unsuccessful, aborting" && exit 1)
+
+      - name: Open Pull Request
+        if: env.updates_available == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: sync-upstream-$(date +%Y%m%d)
+          delete-branch: true
+          title: "Sync miekg/dns upstream changes"
+          body: "Automated PR to sync upstream changes from miekg/dns. Please review and merge if appropriate."
+          labels: "sync, automated"
+          assignees: "phillip-stephens"
