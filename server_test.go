@@ -996,6 +996,101 @@ func TestServerStartStopRace(t *testing.T) {
 	wg.Wait()
 }
 
+func TestSocketOptions(t *testing.T) {
+	if !supportsReuseAddr || !supportsReusePort {
+		t.Skip("reuseaddr or reuseport is not supported")
+	}
+
+	testSocketOptions := func(t *testing.T, reuseAddr bool, reusePort bool) {
+		wait := make(chan struct{})
+
+		srv := &Server{
+			Net:       "udp",
+			Addr:      ":0",
+			ReuseAddr: reuseAddr,
+			ReusePort: reusePort,
+		}
+
+		srv.NotifyStartedFunc = func() {
+			defer close(wait)
+
+			conn, ok := srv.PacketConn.(*net.UDPConn)
+			if !ok {
+				t.Errorf("unexpected conn type: %T", srv.PacketConn)
+				return
+			}
+
+			syscallConn, err := conn.SyscallConn()
+			if err != nil {
+				t.Errorf("cannot cast UDP conn to syscall conn: %v", err)
+				return
+
+			}
+
+			err = syscallConn.Control(func(fd uintptr) {
+				actualReusePort, err := checkReuseport(fd)
+				if err != nil {
+					t.Errorf("cannot get SO_REUSEPORT socket option: %v", err)
+					return
+				}
+
+				if actualReusePort != reusePort {
+					t.Errorf("SO_REUSEPORT is %v instead of %v", actualReusePort, reusePort)
+				}
+
+				actualReuseAddr, err := checkReuseaddr(fd)
+				if err != nil {
+					t.Errorf("cannot get SO_REUSEADDR socket option: %v", err)
+					return
+				}
+
+				if actualReuseAddr != reuseAddr {
+					t.Errorf("SO_REUSEADDR is %v instead of %v", actualReuseAddr, reusePort)
+				}
+			})
+			if err != nil {
+				t.Errorf("cannot check socket options: %v", err)
+			}
+		}
+
+		fin := make(chan error, 1)
+		go func() {
+			fin <- srv.ListenAndServe()
+		}()
+
+		select {
+		case <-wait:
+			err := srv.Shutdown()
+			if err != nil {
+				t.Fatalf("cannot shutdown server: %v", err)
+			}
+
+			err = <-fin
+			if err != nil {
+				t.Fatalf("listen adn serve: %v", err)
+			}
+		case err := <-fin:
+			t.Fatalf("listen adn serve: %v", err)
+		}
+	}
+
+	t.Run("no socket options", func(t *testing.T) {
+		testSocketOptions(t, false, false)
+	})
+
+	t.Run("SO_REUSEPORT", func(t *testing.T) {
+		testSocketOptions(t, false, true)
+	})
+
+	t.Run("SO_REUSEADDR", func(t *testing.T) {
+		testSocketOptions(t, true, false)
+	})
+
+	t.Run("SO_REUSEADDR and SO_REUSEPORT", func(t *testing.T) {
+		testSocketOptions(t, true, true)
+	})
+}
+
 func TestServerReuseport(t *testing.T) {
 	if !supportsReusePort {
 		t.Skip("reuseport is not supported")
@@ -1329,7 +1424,6 @@ func TestResponseWriteSinglePacket(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeTXT)
 	m.Response = true
 	err := rw.WriteMsg(m)
-
 	if err != nil {
 		t.Fatalf("failed to write: %v", err)
 	}
