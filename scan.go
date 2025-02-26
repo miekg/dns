@@ -1307,6 +1307,10 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 }
 
 func toAbsoluteName(name, origin string) (absolute string, ok bool) {
+	if name == "\n" {
+		return "", false
+	}
+
 	// check for an explicit origin reference
 	if name == "@" {
 		// require a nonempty origin
