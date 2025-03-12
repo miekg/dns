@@ -1316,6 +1316,10 @@ func toAbsoluteName(name, origin string) (absolute string, ok bool) {
 		return origin, true
 	}
 
+	if name == "\n" {
+		return "", false
+	}
+
 	// require a valid domain name
 	_, ok = IsDomainName(name)
 	if !ok || name == "" {
