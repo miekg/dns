@@ -56,6 +56,39 @@ func TestOPTTtl(t *testing.T) {
 		t.Errorf("DO bit should be non-zero")
 	}
 
+	// CO (Compact ANswers OK) flag tests follow the same pattern as DO tests
+	// verify that invoking SetCo() sets CO=1
+	e.SetCo()
+	if !e.Co() {
+		t.Errorf("CO bit should be non-zero")
+	}
+
+	// verify that using SetCo(true) works when CO=1
+	e.SetCo(true)
+	if !e.Co() {
+		t.Errorf("CO bit should still be non-zero")
+	}
+	// verify that we can use SetCo(false) to set CO=0
+	e.SetCo(false)
+	if e.Co() {
+		t.Errorf("CO bit should be zero")
+	}
+	// verify that if we call SetCo(false) when CO=0 that it is unchanged
+	e.SetCo(false)
+	if e.Co() {
+		t.Errorf("CO bit should still be zero")
+	}
+	// verify that using SetCo(true) works for CO=0
+	e.SetCo(true)
+	if !e.Co() {
+		t.Errorf("CO bit should be non-zero")
+	}
+	// verify that using SetCo() works for CO=1
+	e.SetCo()
+	if !e.Co() {
+		t.Errorf("CO bit should be non-zero")
+	}
+
 	if e.Version() != 0 {
 		t.Errorf("version should be non-zero")
 	}
@@ -141,6 +174,7 @@ func TestZ(t *testing.T) {
 	e.Hdr.Rrtype = TypeOPT
 	e.SetVersion(8)
 	e.SetDo()
+	e.SetCo()
 	if e.Z() != 0 {
 		t.Errorf("expected Z of 0, got %d", e.Z())
 	}
@@ -149,8 +183,8 @@ func TestZ(t *testing.T) {
 		t.Errorf("expected Z of 5, got %d", e.Z())
 	}
 	e.SetZ(0xFFFF)
-	if e.Z() != 0x7FFF {
-		t.Errorf("expected Z of 0x7FFFF, got %d", e.Z())
+	if e.Z() != 0x3FFF {
+		t.Errorf("expected Z of 0x3FFFF, got %d", e.Z())
 	}
 	if e.Version() != 8 {
 		t.Errorf("expected version to still be 8, got %d", e.Version())
