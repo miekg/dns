@@ -168,3 +168,23 @@ func BenchmarkHashName(b *testing.B) {
 		})
 	}
 }
+
+func TestNsecCover(t *testing.T) {
+	nsec := testRR("aaa.ee.	3600	IN	NSEC	aac.ee. NS RRSIG NSEC").(*NSEC)
+
+	if !nsec.Cover("aaaa.ee.") {
+		t.Fatal("nsec cover not covering in-range name")
+	}
+
+	if !nsec.Cover("aaa.ee.") {
+		t.Fatal("nsec cover not covering start of range")
+	}
+
+	if nsec.Cover("aac.ee.") {
+		t.Fatal("nsec cover range end failure")
+	}
+
+	if nsec.Cover("aad.ee.") {
+		t.Fatal("nsec cover covering out-of-range name")
+	}
+}
