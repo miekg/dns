@@ -1622,7 +1622,7 @@ func (rr *NINFO) parse(c *zlexer, o string) *ParseError {
 
 // Uses the same format as TXT
 func (rr *RESINFO) parse(c *zlexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad RESINFO ")
+	s, e := endingToTxtSlice(c, "bad RESINFO Resinfo")
 	if e != nil {
 		return e
 	}
