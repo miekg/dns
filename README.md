@@ -194,6 +194,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 9461 - Service Binding Mapping for DNS Servers
 * 9462 - Discovery of Designated Resolvers
 * 9460 - SVCB and HTTPS Records
+* 9606 - DNS Resolver Information
 * Draft - Compact Denial of Existence in DNSSEC
 
 ## Loosely Based Upon
