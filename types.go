@@ -181,6 +181,19 @@ const (
 	AMTRELAYHost = IPSECGatewayHost
 )
 
+// Stateful types as defined in RFC 8490.
+const (
+	StatefulTypeKeepAlive uint16 = iota + 1
+	StatefulTypeRetryDelay
+	StatefulTypeEncryptionPadding
+)
+
+var StatefulTypeToString = map[uint16]string{
+	StatefulTypeKeepAlive:         "KeepAlive",
+	StatefulTypeRetryDelay:        "RetryDelay",
+	StatefulTypeEncryptionPadding: "EncryptionPadding",
+}
+
 // Header is the wire format for the DNS packet header.
 type Header struct {
 	Id                                 uint16
