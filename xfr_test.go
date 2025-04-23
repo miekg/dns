@@ -2,6 +2,7 @@ package dns
 
 import (
 	"crypto/tls"
+	"errors"
 	"testing"
 	"time"
 )
@@ -221,6 +222,29 @@ func axfrTestingSuiteWithCustomTsig(t *testing.T, addrstr string, provider TsigP
 	}
 }
 
+func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider TsigProvider) {
+	tr := new(Transfer)
+	m := new(Msg)
+	var err error
+	tr.Conn, err = Dial("tcp", addrstr)
+	if err != nil {
+		t.Fatal("failed to dial", err)
+	}
+	tr.TsigProvider = provider
+	m.SetAxfr("miek.nl.")
+
+	c, err := tr.In(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to zone transfer in", err)
+	}
+
+	for msg := range c {
+		if !errors.Is(msg.Error, ErrNoSig) {
+			t.Fatal("expecting ErrNoSig error")
+		}
+	}
+}
+
 func TestCustomTsigProvider(t *testing.T) {
 	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
@@ -234,4 +258,17 @@ func TestCustomTsigProvider(t *testing.T) {
 	defer s.Shutdown()
 
 	axfrTestingSuiteWithCustomTsig(t, addrstr, tsigSecretProvider(tsigSecret))
+}
+
+func TestTSIGNotSigned(t *testing.T) {
+	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	axfrTestingSuiteWithMsgNotSigned(t, addrstr, tsigSecretProvider(tsigSecret))
 }
