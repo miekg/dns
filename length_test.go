@@ -33,9 +33,12 @@ func TestMsgCompressLength(t *testing.T) {
 	name1 := "12345678901234567890123456789012345.12345678.123."
 	rrA := testRR(name1 + " 3600 IN A 192.0.2.1")
 	rrMx := testRR(name1 + " 3600 IN MX 10 " + name1)
+	rrSig := testRR(name1 + " 3600 IN RRSIG A 13 3 3600 20151021000000 20151020000000 12345 12345678.123. 6AF6rwhRrx9cPGptdWkkCZLWwpff+WQ2HvHw8ahhkcyagHD4udi5WQrmOsCg28sAtbd2brTUyOwsrlGjpLHJGA==")
 	tests := []*Msg{
 		makeMsg(name1, []RR{rrA}, nil, nil),
-		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)}
+		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil),
+		makeMsg(name1, []RR{rrA, rrSig}, nil, nil),
+	}
 
 	for _, msg := range tests {
 		predicted := msg.Len()
@@ -43,7 +46,7 @@ func TestMsgCompressLength(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if predicted < len(buf) {
+		if predicted != len(buf) {
 			t.Errorf("predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d",
 				msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
 		}
@@ -53,7 +56,6 @@ func TestMsgCompressLength(t *testing.T) {
 func TestMsgLength(t *testing.T) {
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
-		msg.Compress = true
 		msg.SetQuestion(Fqdn(question), TypeANY)
 		msg.Answer = append(msg.Answer, ans...)
 		msg.Ns = append(msg.Ns, ns...)
@@ -64,9 +66,12 @@ func TestMsgLength(t *testing.T) {
 	name1 := "12345678901234567890123456789012345.12345678.123."
 	rrA := testRR(name1 + " 3600 IN A 192.0.2.1")
 	rrMx := testRR(name1 + " 3600 IN MX 10 " + name1)
+	rrSig := testRR(name1 + " 3600 IN RRSIG A 13 3 3600 20151021000000 20151020000000 12345 12345678.123. 6AF6rwhRrx9cPGptdWkkCZLWwpff+WQ2HvHw8ahhkcyagHD4udi5WQrmOsCg28sAtbd2brTUyOwsrlGjpLHJGA==")
 	tests := []*Msg{
 		makeMsg(name1, []RR{rrA}, nil, nil),
-		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)}
+		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil),
+		makeMsg(name1, []RR{rrA, rrSig}, nil, nil),
+	}
 
 	for _, msg := range tests {
 		predicted := msg.Len()
@@ -74,9 +79,9 @@ func TestMsgLength(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if predicted < len(buf) {
-			t.Errorf("predicted length is wrong: predicted %s (len=%d), actual %d",
-				msg.Question[0].Name, predicted, len(buf))
+		if predicted != len(buf) {
+			t.Errorf("predicted length is wrong: predicted %s (len=%d) %d, actual %d",
+				msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
 		}
 	}
 }

@@ -34,7 +34,6 @@ var packageHdr = `
 package dns
 
 import (
-	"encoding/base64"
 	"net"
 )
 
@@ -205,7 +204,7 @@ func main() {
 			case strings.HasPrefix(st.Tag(i), `dns:"size-base64`):
 				fallthrough
 			case st.Tag(i) == `dns:"base64"`:
-				o("l += base64.StdEncoding.DecodedLen(len(rr.%s))\n")
+				o("l += base64StringDecodedLen(rr.%s)\n")
 			case strings.HasPrefix(st.Tag(i), `dns:"size-hex:`): // this has an extra field where the length is stored
 				o("l += len(rr.%s)/2\n")
 			case st.Tag(i) == `dns:"hex"`:
