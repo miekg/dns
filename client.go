@@ -258,7 +258,17 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		// to use an erroneous message
 		return m, err
 	}
-	if t := m.IsTsig(); t != nil {
+	t := m.IsTsig()
+	// Servers MUST reply with a TSIG RR in the response unless the request
+	// TSIG RR couldn't be interpreted, in which case it must reply FORMERR.
+	// See RFC 8945 §5.2 "Server Processing of Request".
+	//
+	// If we generated a TSIG signature for the request, and we find no TSIG
+	// RR in the response, and it isn't a FORMERR response, the signature
+	// is missing.
+	if co.tsigRequestMAC != "" && t == nil && m.Rcode != RcodeFormatError {
+		return nil, ErrNoSig
+	} else if t != nil {
 		// Need to work on the original message p, as that was used to calculate the tsig.
 		err = TsigVerifyWithProvider(p, co.tsigProvider(), co.tsigRequestMAC, false)
 	}
