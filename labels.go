@@ -66,10 +66,7 @@ func CompareDomainName(s1, s2 string) (n int) {
 	} else {
 		return
 	}
-	for {
-		if i1 < 0 || i2 < 0 {
-			break
-		}
+	for i1 < 0 || i2 < 0 {
 		if equal(s1[l1[i1]:l1[j1]], s2[l2[i2]:l2[j2]]) {
 			n++
 		} else {
