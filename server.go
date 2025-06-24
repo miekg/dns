@@ -480,7 +480,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 			if !srv.isStarted() {
 				return nil
 			}
-			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+			if neterr, ok := err.(net.Error); ok && neterr.Timeout() {
 				continue
 			}
 			return err
@@ -539,7 +539,7 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			if !srv.isStarted() {
 				return nil
 			}
-			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 				continue
 			}
 			return err
@@ -719,7 +719,7 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	m := srv.udpPool.Get().([]byte)
 	n, s, err := ReadFromSessionUDP(conn, m)
 	if err != nil {
-		srv.udpPool.Put(m)
+		srv.udpPool.Put(&m)
 		return nil, nil, err
 	}
 	m = m[:n]
@@ -737,7 +737,7 @@ func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([
 	m := srv.udpPool.Get().([]byte)
 	n, addr, err := conn.ReadFrom(m)
 	if err != nil {
-		srv.udpPool.Put(m)
+		srv.udpPool.Put(&m)
 		return nil, nil, err
 	}
 	m = m[:n]
