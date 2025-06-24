@@ -719,7 +719,7 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	m := srv.udpPool.Get().([]byte)
 	n, s, err := ReadFromSessionUDP(conn, m)
 	if err != nil {
-		srv.udpPool.Put(m)
+		srv.udpPool.Put(&m)
 		return nil, nil, err
 	}
 	m = m[:n]
@@ -737,7 +737,7 @@ func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([
 	m := srv.udpPool.Get().([]byte)
 	n, addr, err := conn.ReadFrom(m)
 	if err != nil {
-		srv.udpPool.Put(m)
+		srv.udpPool.Put(&m)
 		return nil, nil, err
 	}
 	m = m[:n]
