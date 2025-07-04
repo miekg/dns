@@ -2,6 +2,7 @@ package dns
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"net"
 	"testing"
@@ -24,9 +25,11 @@ func TestPackUnpack(t *testing.T) {
 		t.Error("failed to unpack msg with DNSKEY")
 	}
 
-	sig := &RRSIG{TypeCovered: TypeDNSKEY, Algorithm: RSASHA1, Labels: 2,
+	sig := &RRSIG{
+		TypeCovered: TypeDNSKEY, Algorithm: RSASHA1, Labels: 2,
 		OrigTtl: 3600, Expiration: 4000, Inception: 4000, KeyTag: 34641, SignerName: "miek.nl.",
-		Signature: "AwEAAaHIwpx3w4VHKi6i1LHnTaWeHCL154Jug0Rtc9ji5qwPXpBo6A5sRv7cSsPQKPIwxLpyCrbJ4mr2L0EPOdvP6z6YfljK2ZmTbogU9aSU2fiq/4wjxbdkLyoDVgtO+JsxNN4bjr4WcWhsmk1Hg93FV9ZpkWb0Tbad8DFqNDzr//kZ"}
+		Signature: "AwEAAaHIwpx3w4VHKi6i1LHnTaWeHCL154Jug0Rtc9ji5qwPXpBo6A5sRv7cSsPQKPIwxLpyCrbJ4mr2L0EPOdvP6z6YfljK2ZmTbogU9aSU2fiq/4wjxbdkLyoDVgtO+JsxNN4bjr4WcWhsmk1Hg93FV9ZpkWb0Tbad8DFqNDzr//kZ",
+	}
 	sig.Hdr = RR_Header{Name: "miek.nl.", Rrtype: TypeRRSIG, Class: ClassINET, Ttl: 3600}
 
 	out.Answer[0] = sig
@@ -177,13 +180,17 @@ func TestNoRdataUnpack(t *testing.T) {
 		}
 		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 16}
-		off, err := PackRR(r, data, 0, nil, false)
+		_, err := PackRR(r, data, 0, nil, false)
 		if err != nil {
 			// Should always works, TestNoDataPack should have caught this
 			t.Errorf("failed to pack RR: %v", err)
 			continue
 		}
-		if _, _, err := UnpackRR(data[:off], 0); err != nil {
+
+		headerOff := Len(r.Header())
+		// manually set rdlength to 0
+		binary.BigEndian.PutUint16(data[headerOff-2:headerOff], 0)
+		if _, _, err := UnpackRR(data[:headerOff], 0); err != nil {
 			t.Errorf("failed to unpack RR with zero rdata: %s: %v", TypeToString[typ], err)
 		}
 	}
@@ -239,7 +246,7 @@ func TestMsgCopy(t *testing.T) {
 }
 
 func TestMsgPackBuffer(t *testing.T) {
-	var testMessages = []string{
+	testMessages := []string{
 		// news.ycombinator.com.in.escapemg.com.	IN	A, response
 		"586285830001000000010000046e6577730b79636f6d62696e61746f7203636f6d02696e086573636170656d6703636f6d0000010001c0210006000100000e10002c036e7332c02103646e730b67726f6f7665736861726bc02d77ed50e600002a3000000e1000093a8000000e10",
 
@@ -312,6 +319,20 @@ func TestTKEY(t *testing.T) {
 	_, newError := NewRR(tkey.String())
 	if newError != nil {
 		t.Fatalf("unable to parse TKEY string: %s", newError)
+	}
+}
+
+func TestEmptyMsg(t *testing.T) {
+	testEmpty := []byte{}
+
+	rr, _, err := UnpackRR(testEmpty, 0)
+	if err == nil {
+		t.Fatalf("expected unpack failure for empty message, got %s", rr)
+	}
+
+	rr, _, err = UnpackRR(nil, 0)
+	if err == nil {
+		t.Fatalf("expected unpack failure for nil message, got %s", rr)
 	}
 }
 

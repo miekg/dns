@@ -69,9 +69,6 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 // re-sliced msg according to the expected length of the RR.
 func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte, err error) {
 	hdr := RR_Header{}
-	if off == len(msg) {
-		return hdr, off, msg, nil
-	}
 
 	hdr.Name, off, err = UnpackDomainName(msg, off)
 	if err != nil {
@@ -100,10 +97,6 @@ func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte,
 // packHeader packs an RR header, returning the offset to the end of the header.
 // See PackDomainName for documentation about the compression.
 func (hdr RR_Header) packHeader(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
-	if off == len(msg) {
-		return off, nil
-	}
-
 	off, err := packDomainName(hdr.Name, msg, off, compression, compress)
 	if err != nil {
 		return len(msg), err

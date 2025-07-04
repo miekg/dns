@@ -300,13 +300,6 @@ return off, err
 			default:
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
-			// If we've hit len(msg) we return without error.
-			if i < st.NumFields()-1 {
-				fmt.Fprint(b, `if off == len(msg) {
-return off, nil
-	}
-`)
-			}
 		}
 		fmt.Fprintf(b, "return off, nil }\n\n")
 	}
