@@ -322,17 +322,44 @@ func TestTKEY(t *testing.T) {
 	}
 }
 
-func TestEmptyMsg(t *testing.T) {
+func TestShortMsg(t *testing.T) {
 	testEmpty := []byte{}
 
 	rr, _, err := UnpackRR(testEmpty, 0)
 	if err == nil {
-		t.Fatalf("expected unpack failure for empty message, got %s", rr)
+		t.Errorf("expected unpack failure for empty message, got %s", rr)
 	}
 
 	rr, _, err = UnpackRR(nil, 0)
 	if err == nil {
-		t.Fatalf("expected unpack failure for nil message, got %s", rr)
+		t.Errorf("expected unpack failure for nil message, got %s", rr)
+	}
+
+	rr = &MX{
+		Hdr: RR_Header{
+			Name:   "miek.nl.",
+			Rrtype: TypeMX,
+			Class:  ClassINET,
+			Ttl:    30,
+		},
+		Preference: 50,
+		Mx:         "",
+	}
+
+	msg := make([]byte, Len(rr))
+	_, err = PackRR(rr, msg, 0, nil, false)
+	if err != nil {
+		t.Fatalf("unexpected error in TestShortMsg: %s", err)
+		return
+	}
+
+	headerOff := Len(rr.Header())
+	// manually set rdlength to 2, covering just the preference
+	binary.BigEndian.PutUint16(msg[headerOff-2:headerOff], 2)
+
+	rr, _, err = UnpackRR(msg, 0)
+	if err == nil {
+		t.Errorf("expected unpack success for short message, got %s", rr)
 	}
 }
 
