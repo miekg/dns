@@ -2,7 +2,9 @@ package dns
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net"
@@ -714,5 +716,79 @@ func TestExchangeWithConn(t *testing.T) {
 	}
 	if r.Rcode != RcodeSuccess {
 		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+}
+
+// TestReadMsgTsigResponses tests that TSIG authenticated queries correctly
+// enforce the presence of a TSIG RR in the reply.
+func TestReadMsgTsigResponses(t *testing.T) {
+	tests := []struct {
+		name        string
+		handler     HandlerFunc
+		expectErr   error
+		expectRcode int
+	}{
+		{
+			// A test case where we send a TSIG signed request and receive
+			// an unsigned, non-FORMERR reply. This should result in ErrNoSig.
+			name:      "unsigned_error",
+			handler:   HelloServer,
+			expectErr: ErrNoSig,
+		},
+		{
+			// A test case where we send a TSIG signed request and receive
+			// an unsigned FORMERR reply. This should result in a non-err
+			// result with rcode RcodeFormatError.
+			name: "unsigned_formerr",
+			handler: func(w ResponseWriter, req *Msg) {
+				m := new(Msg)
+				m.SetRcodeFormatError(req)
+				w.WriteMsg(m)
+			},
+			expectRcode: RcodeFormatError,
+		},
+	}
+
+	tsigKey := make([]byte, 32)
+	rand.Read(tsigKey)
+	testKeyName := "test-key."
+	tsigSecrets := map[string]string{testKeyName: base64.StdEncoding.EncodeToString(tsigKey)}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			HandleFunc("miek.nl.", tt.handler)
+			defer HandleRemove("miek.nl.")
+
+			s, addrstr, _, err := RunLocalUDPServer(":0")
+			if err != nil {
+				t.Fatalf("unable to run test server: %v", err)
+			}
+			defer s.Shutdown()
+
+			m := new(Msg)
+			m.SetQuestion("miek.nl.", TypeSOA)
+			m.SetTsig(testKeyName, HmacSHA256, 300, time.Now().Unix())
+
+			c := new(Client)
+			c.TsigSecret = tsigSecrets
+			conn, err := c.Dial(addrstr)
+			if err != nil {
+				t.Fatalf("failed to dial: %v", err)
+			}
+
+			r, _, err := c.ExchangeWithConn(m, conn)
+			if tt.expectErr != nil {
+				if !errors.Is(err, tt.expectErr) {
+					t.Errorf("expected %v got %v", tt.expectErr, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected err: %v", err)
+				}
+				if r.Rcode != tt.expectRcode {
+					t.Errorf("expected rcode %v got %v", tt.expectRcode, r.Rcode)
+				}
+			}
+		})
 	}
 }
