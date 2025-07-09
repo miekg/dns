@@ -3,7 +3,6 @@
 package dns
 
 import (
-	"encoding/base64"
 	"net"
 )
 
@@ -338,7 +337,7 @@ func (rr *CERT) len(off int, compression map[string]struct{}) int {
 	l += 2 // Type
 	l += 2 // KeyTag
 	l++    // Algorithm
-	l += base64.StdEncoding.DecodedLen(len(rr.Certificate))
+	l += base64StringDecodedLen(rr.Certificate)
 	return l
 }
 
@@ -350,7 +349,7 @@ func (rr *CNAME) len(off int, compression map[string]struct{}) int {
 
 func (rr *DHCID) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
-	l += base64.StdEncoding.DecodedLen(len(rr.Digest))
+	l += base64StringDecodedLen(rr.Digest)
 	return l
 }
 
@@ -365,7 +364,7 @@ func (rr *DNSKEY) len(off int, compression map[string]struct{}) int {
 	l += 2 // Flags
 	l++    // Protocol
 	l++    // Algorithm
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64StringDecodedLen(rr.PublicKey)
 	return l
 }
 
@@ -423,7 +422,7 @@ func (rr *HIP) len(off int, compression map[string]struct{}) int {
 	l++    // PublicKeyAlgorithm
 	l += 2 // PublicKeyLength
 	l += len(rr.Hit) / 2
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64StringDecodedLen(rr.PublicKey)
 	for _, x := range rr.RendezvousServers {
 		l += domainNameLen(x, off+l, compression, false)
 	}
@@ -443,7 +442,7 @@ func (rr *IPSECKEY) len(off int, compression map[string]struct{}) int {
 	case IPSECGatewayHost:
 		l += len(rr.GatewayHost) + 1
 	}
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64StringDecodedLen(rr.PublicKey)
 	return l
 }
 
@@ -607,7 +606,7 @@ func (rr *NXNAME) len(off int, compression map[string]struct{}) int {
 
 func (rr *OPENPGPKEY) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64StringDecodedLen(rr.PublicKey)
 	return l
 }
 
@@ -644,7 +643,7 @@ func (rr *RKEY) len(off int, compression map[string]struct{}) int {
 	l += 2 // Flags
 	l++    // Protocol
 	l++    // Algorithm
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64StringDecodedLen(rr.PublicKey)
 	return l
 }
 
@@ -665,7 +664,7 @@ func (rr *RRSIG) len(off int, compression map[string]struct{}) int {
 	l += 4 // Inception
 	l += 2 // KeyTag
 	l += domainNameLen(rr.SignerName, off+l, compression, false)
-	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
+	l += base64StringDecodedLen(rr.Signature)
 	return l
 }
 
