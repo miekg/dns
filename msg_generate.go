@@ -24,6 +24,7 @@ var packageHdr = `
 
 package dns
 
+import "fmt"
 `
 
 // getTypeStruct will take a type and the package scope, and return the
@@ -208,10 +209,15 @@ _ = rdStart
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
-				fmt.Fprint(b, `if err != nil {
-return off, err
+
+				err_name := name
+				if name != st.Field(i).Name() {
+					err_name += "." + st.Field(i).Name()
+				}
+				fmt.Fprintf(b, `if err != nil {
+return off, fmt.Errorf("%s: %%w", err)
 }
-`)
+`, err_name)
 			}
 
 			// size-* are special, because they reference a struct member we should use for the length.
