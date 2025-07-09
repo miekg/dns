@@ -1123,21 +1123,21 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 	)
 	q.Name, off, err = UnpackDomainName(msg, off)
 	if err != nil {
-		return q, off, fmt.Errorf("question.Name: %w", err)
+		return q, off, fmt.Errorf("bad question name: %w", err)
 	}
 	if off == len(msg) {
 		return q, off, nil
 	}
 	q.Qtype, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return q, off, fmt.Errorf("question.Qtype: %w", err)
+		return q, off, fmt.Errorf("bad question qtype: %w", err)
 	}
 	if off == len(msg) {
 		return q, off, nil
 	}
 	q.Qclass, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return q, off, fmt.Errorf("question.Qclass: %w", err)
+		return q, off, fmt.Errorf("bad question qclass: %w", err)
 	}
 
 	if off == len(msg) {
@@ -1182,27 +1182,27 @@ func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
 	)
 	dh.Id, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, fmt.Errorf("header.Id: %w", err)
+		return dh, off, fmt.Errorf("bad header id: %w", err)
 	}
 	dh.Bits, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, fmt.Errorf("header.Bits: %w", err)
+		return dh, off, fmt.Errorf("bad header bits: %w", err)
 	}
 	dh.Qdcount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, fmt.Errorf("header.Qdcount: %w", err)
+		return dh, off, fmt.Errorf("bad header question count: %w", err)
 	}
 	dh.Ancount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, fmt.Errorf("header.Ancount: %w", err)
+		return dh, off, fmt.Errorf("bad header answer count: %w", err)
 	}
 	dh.Nscount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, fmt.Errorf("header.Nscount: %w", err)
+		return dh, off, fmt.Errorf("bad header ns count: %w", err)
 	}
 	dh.Arcount, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return dh, off, fmt.Errorf("header.Arcount: %w", err)
+		return dh, off, fmt.Errorf("bad header extra count: %w", err)
 	}
 	return dh, off, nil
 }
