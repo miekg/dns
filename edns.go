@@ -24,6 +24,7 @@ const (
 	EDNS0TCPKEEPALIVE = 0xb     // EDNS0 tcp keep alive (See RFC 7828)
 	EDNS0PADDING      = 0xc     // EDNS0 padding (See RFC 7830)
 	EDNS0EDE          = 0xf     // EDNS0 extended DNS errors (See RFC 8914)
+	EDNS0REPORTING    = 0x12    // EDNS0 reporting (See RFC 9567)
 	EDNS0LOCALSTART   = 0xFDE9  // Beginning of range reserved for local/experimental use (See RFC 6891)
 	EDNS0LOCALEND     = 0xFFFE  // End of range reserved for local/experimental use (See RFC 6891)
 	_DO               = 1 << 15 // DNSSEC OK
@@ -60,6 +61,8 @@ func makeDataOpt(code uint16) EDNS0 {
 		return new(EDNS0_EDE)
 	case EDNS0ESU:
 		return new(EDNS0_ESU)
+	case EDNS0REPORTING:
+		return new(EDNS0_REPORTING)
 	default:
 		e := new(EDNS0_LOCAL)
 		e.Code = code
@@ -127,6 +130,8 @@ func (rr *OPT) String() string {
 			s += "\n; EDE: " + o.String()
 		case *EDNS0_ESU:
 			s += "\n; ESU: " + o.String()
+		case *EDNS0_REPORTING:
+			s += "\n; REPORT-CHANNEL: " + o.String()
 		}
 	}
 	return s
@@ -873,5 +878,31 @@ func (e *EDNS0_ESU) copy() EDNS0           { return &EDNS0_ESU{e.Code, e.Uri} }
 func (e *EDNS0_ESU) pack() ([]byte, error) { return []byte(e.Uri), nil }
 func (e *EDNS0_ESU) unpack(b []byte) error {
 	e.Uri = string(b)
+	return nil
+}
+
+// EDNS0_REPORTING implements the EDNS0 Reporting Channel option (RFC 9567).
+type EDNS0_REPORTING struct {
+	Code        uint16 // always EDNS0REPORTING
+	AgentDomain string
+}
+
+func (e *EDNS0_REPORTING) Option() uint16 { return EDNS0REPORTING }
+func (e *EDNS0_REPORTING) String() string { return e.AgentDomain }
+func (e *EDNS0_REPORTING) copy() EDNS0    { return &EDNS0_REPORTING{e.Code, e.AgentDomain} }
+func (e *EDNS0_REPORTING) pack() ([]byte, error) {
+	b := make([]byte, 255)
+	off1, err := PackDomainName(Fqdn(e.AgentDomain), b, 0, nil, false)
+	if err != nil {
+		return nil, fmt.Errorf("bad agent domain: %w", err)
+	}
+	return b[:off1], nil
+}
+func (e *EDNS0_REPORTING) unpack(b []byte) error {
+	domain, _, err := UnpackDomainName(b, 0)
+	if err != nil {
+		return fmt.Errorf("bad agent domain: %w", err)
+	}
+	e.AgentDomain = domain
 	return nil
 }
