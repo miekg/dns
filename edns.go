@@ -894,14 +894,14 @@ func (e *EDNS0_REPORTING) pack() ([]byte, error) {
 	b := make([]byte, 255)
 	off1, err := PackDomainName(Fqdn(e.AgentDomain), b, 0, nil, false)
 	if err != nil {
-		return nil, fmt.Errorf("dns: error packing AgentDomain: %w", err)
+		return nil, fmt.Errorf("bad agent domain: %w", err)
 	}
 	return b[:off1], nil
 }
 func (e *EDNS0_REPORTING) unpack(b []byte) error {
 	domain, _, err := UnpackDomainName(b, 0)
 	if err != nil {
-		return fmt.Errorf("dns: error unpacking AgentDomain: %w", err)
+		return fmt.Errorf("bad agent domain: %w", err)
 	}
 	e.AgentDomain = domain
 	return nil
