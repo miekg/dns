@@ -891,9 +891,8 @@ func (e *EDNS0_REPORTING) Option() uint16 { return EDNS0REPORTING }
 func (e *EDNS0_REPORTING) String() string { return e.AgentDomain }
 func (e *EDNS0_REPORTING) copy() EDNS0    { return &EDNS0_REPORTING{e.Code, e.AgentDomain} }
 func (e *EDNS0_REPORTING) pack() ([]byte, error) {
-	b := make([]byte, 0, len(e.AgentDomain))
-	compression := make(map[string]int)
-	off1, err := PackDomainName(e.AgentDomain, b, 0, compression, false)
+	b := make([]byte, 255)
+	off1, err := PackDomainName(Fqdn(e.AgentDomain), b, 0, nil, false)
 	if err != nil {
 		return nil, fmt.Errorf("dns: error packing AgentDomain: %w", err)
 	}
