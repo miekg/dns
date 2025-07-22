@@ -572,11 +572,6 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		reader = srv.DecorateReader(reader)
 	}
 
-	idleTimeout := tcpIdleTimeout
-	if srv.IdleTimeout != nil {
-		idleTimeout = srv.IdleTimeout()
-	}
-
 	timeout := srv.getReadTimeout()
 
 	limit := srv.MaxTCPQueries
@@ -599,7 +594,10 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		}
 		// The first read uses the read timeout, the rest use the
 		// idle timeout.
-		timeout = idleTimeout
+		timeout = tcpIdleTimeout
+		if srv.IdleTimeout != nil {
+			timeout = srv.IdleTimeout()
+		}
 	}
 
 	if !w.hijacked {
