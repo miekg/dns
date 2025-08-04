@@ -168,6 +168,16 @@ func fromBase64(s []byte) (buf []byte, err error) {
 
 func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
+// base64StringDecodedLen returns the exact length in bytes of the decoded data
+// represented by the base64 string s.
+func base64StringDecodedLen(s string) int {
+	n := len(s)
+	for n > 0 && s[n-1] == '=' {
+		n--
+	}
+	return n * 3 / 4
+}
+
 // dynamicUpdate returns true if the Rdlength is zero.
 func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
 
