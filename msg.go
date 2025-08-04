@@ -48,14 +48,14 @@ const (
 
 // Errors defined in this package.
 var (
-	ErrAlg           error = &Error{err: "bad algorithm"}                                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrAuth          error = &Error{err: "bad authentication"}                             // ErrAuth indicates an error in the TSIG authentication.
-	ErrBuf           error = &Error{err: "buffer size too small"}                          // ErrBuf indicates that the buffer used is too small for the message.
-	ErrConnEmpty     error = &Error{err: "conn has no connection"}                         // ErrConnEmpty indicates a connection is being used before it is initialized.
-	ErrExtendedRcode error = &Error{err: "bad extended rcode"}                             // ErrExtendedRcode ...
-	ErrFqdn          error = &Error{err: "domain and/or TSIG key must be fully qualified"} // ErrFqdn indicates that a domain name or TSIG key name does not have a closing dot.
-	ErrId            error = &Error{err: "id mismatch"}                                    // ErrId indicates there is a mismatch with the message's ID.
-	ErrKeyAlg        error = &Error{err: "bad key algorithm"}                              // ErrKeyAlg indicates that the algorithm in the key is not valid.
+	ErrAlg           error = &Error{err: "bad algorithm"}                                       // ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrAuth          error = &Error{err: "bad authentication"}                                  // ErrAuth indicates an error in the TSIG authentication.
+	ErrBuf           error = &Error{err: "buffer size too small"}                               // ErrBuf indicates that the buffer used is too small for the message.
+	ErrConnEmpty     error = &Error{err: "conn has no connection"}                              // ErrConnEmpty indicates a connection is being used before it is initialized.
+	ErrExtendedRcode error = &Error{err: "bad extended rcode"}                                  // ErrExtendedRcode ...
+	ErrFqdn          error = &Error{err: "domain and/or TSIG key name must be fully qualified"} // ErrFqdn indicates that a domain name or TSIG key name does not have a closing dot.
+	ErrId            error = &Error{err: "id mismatch"}                                         // ErrId indicates there is a mismatch with the message's ID.
+	ErrKeyAlg        error = &Error{err: "bad key algorithm"}                                   // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey           error = &Error{err: "bad key"}
 	ErrKeySize       error = &Error{err: "bad key size"}
 	ErrLongDomain    error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
