@@ -10,6 +10,11 @@ TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 Note that domain names MUST be fully qualified before sending them, unqualified
 names in a message will result in a packing failure.
 
+Note that domain names, including those used as TSIG key names, MUST be fully qualified before
+sending them. Unqualified names in a message will result in a packing failure.
+To ensure full qualification, the dns.Fqdn() function can be used to normalize domain names
+by appending a trailing dot if one is not already present.
+
 Resource records are native types. They are not stored in wire format. Basic
 usage pattern for creating a new resource record:
 
@@ -164,6 +169,15 @@ The supported algorithms include: HmacSHA1, HmacSHA256 and HmacSHA512.
 Basic use pattern when querying with a TSIG name "axfr." (note that these key names
 must be fully qualified - as they are domain names) and the base64 secret
 "so6ZGir4GPAqINNh9U5c3A==":
+
+It is recommended to use the dns.Fqdn() function to ensure that the TSIG key name
+is fully qualified. This guarantees that the key name is treated correctly by the
+DNS system, avoiding unintended interpretation as a relative name.
+
+For example:
+c.TsigSecret = map[string]string{dns.Fqdn(TSIGKeyName): TSIGSecret}
+This approach not only ensures compliance with DNS standards but also simplifies
+key name management.
 
 If an incoming message contains a TSIG record it MUST be the last record in
 the additional section (RFC2845 3.2).  This means that you should make the
