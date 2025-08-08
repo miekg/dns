@@ -92,17 +92,18 @@ func id() uint16 {
 
 // MsgHdr is a a manually-unpacked version of (id, bits).
 type MsgHdr struct {
-	Id                 uint16
-	Response           bool
-	Opcode             int
-	Authoritative      bool
-	Truncated          bool
-	RecursionDesired   bool
-	RecursionAvailable bool
-	Zero               bool
-	AuthenticatedData  bool
-	CheckingDisabled   bool
-	Rcode              int
+	Id                                 uint16
+	Response                           bool
+	Opcode                             int
+	Authoritative                      bool
+	Truncated                          bool
+	RecursionDesired                   bool
+	RecursionAvailable                 bool
+	Zero                               bool
+	AuthenticatedData                  bool
+	CheckingDisabled                   bool
+	Rcode                              int
+	Qdcount, Ancount, Nscount, Arcount *uint16 `json:"-"` // Optional counts, may deviate from actual array lengths.
 }
 
 // Msg contains the layout of a DNS message.
@@ -777,10 +778,26 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 		dh.Bits |= _CD
 	}
 
-	dh.Qdcount = uint16(len(dns.Question))
-	dh.Ancount = uint16(len(dns.Answer))
-	dh.Nscount = uint16(len(dns.Ns))
-	dh.Arcount = uint16(len(dns.Extra))
+	if dns.Qdcount != nil {
+		dh.Qdcount = *dns.Qdcount
+	} else {
+		dh.Qdcount = uint16(len(dns.Question))
+	}
+	if dns.Ancount != nil {
+		dh.Ancount = *dns.Ancount
+	} else {
+		dh.Ancount = uint16(len(dns.Answer))
+	}
+	if dns.Nscount != nil {
+		dh.Nscount = *dns.Nscount
+	} else {
+		dh.Nscount = uint16(len(dns.Ns))
+	}
+	if dns.Arcount != nil {
+		dh.Arcount = *dns.Arcount
+	} else {
+		dh.Arcount = uint16(len(dns.Extra))
+	}
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
