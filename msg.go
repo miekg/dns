@@ -61,6 +61,8 @@ var (
 	ErrLongDomain    error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
 	ErrNoSig         error = &Error{err: "no signature found"}
 	ErrPrivKey       error = &Error{err: "bad private key"}
+	ErrResponse      error = &Error{err: "bad QR bit"}
+	ErrOpcode        error = &Error{err: "bad opcode"}
 	ErrRcode         error = &Error{err: "bad rcode"}
 	ErrRdata         error = &Error{err: "bad rdata"}
 	ErrRRset         error = &Error{err: "bad rrset"}
@@ -127,11 +129,12 @@ var ClassToString = map[uint16]string{
 
 // OpcodeToString maps Opcodes to strings.
 var OpcodeToString = map[int]string{
-	OpcodeQuery:  "QUERY",
-	OpcodeIQuery: "IQUERY",
-	OpcodeStatus: "STATUS",
-	OpcodeNotify: "NOTIFY",
-	OpcodeUpdate: "UPDATE",
+	OpcodeQuery:    "QUERY",
+	OpcodeIQuery:   "IQUERY",
+	OpcodeStatus:   "STATUS",
+	OpcodeNotify:   "NOTIFY",
+	OpcodeUpdate:   "UPDATE",
+	OpcodeStateful: "STATEFUL",
 }
 
 // RcodeToString maps Rcodes to strings.
@@ -739,6 +742,11 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 		return nil, ErrRcode
 	}
 
+	// Non-empty stateful message must be represented by a DSOMsg
+	if dns.Opcode == OpcodeStateful && (len(dns.Question) != 0 || len(dns.Answer) != 0 || len(dns.Ns) != 0 || len(dns.Extra) != 0) {
+		return nil, ErrOpcode
+	}
+
 	// Set extended rcode unconditionally if we have an opt, this will allow
 	// resetting the extended rcode bits if they need to.
 	if opt := dns.IsEdns0(); opt != nil {
@@ -885,6 +893,12 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	}
 
 	dns.setHdr(dh)
+
+	// Non-empty stateful message must be unpacked by DSOMsg
+	if dns.Opcode == OpcodeStateful && len(msg) > headerSize {
+		return ErrOpcode
+	}
+
 	return dns.unpack(dh, msg, off)
 }
 

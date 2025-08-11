@@ -694,6 +694,9 @@ func (e *EDNS0_LOCAL) unpack(b []byte) error {
 
 // EDNS0_TCP_KEEPALIVE is an EDNS0 option that instructs the server to keep
 // the TCP connection alive. See RFC 7828.
+//
+// The receiver must forcibly abort the connection if this option is present within
+// an active DSO session. See RFC 8490, Section 7.1.2
 type EDNS0_TCP_KEEPALIVE struct {
 	Code uint16 // always EDNSTCPKEEPALIVE
 

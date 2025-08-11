@@ -19,6 +19,8 @@ type MsgAcceptFunc func(dh Header) MsgAcceptAction
 // * has more than 2 RRs in the Additional section
 var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
 
+var DefaultDSOMsgAcceptFunc MsgAcceptFunc = defaultDSOMsgAcceptFunc
+
 // MsgAcceptAction represents the action to be taken.
 type MsgAcceptAction int
 
@@ -28,6 +30,7 @@ const (
 	MsgReject                                      // Reject the message with a RcodeFormatError
 	MsgIgnore                                      // Ignore the error and send nothing back.
 	MsgRejectNotImplemented                        // Reject the message with a RcodeNotImplemented
+	MsgAbort                                       // Forcibly abort the connection
 )
 
 func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
@@ -55,5 +58,25 @@ func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
 	if dh.Arcount > 2 {
 		return MsgReject
 	}
+	return MsgAccept
+}
+
+func defaultDSOMsgAcceptFunc(dh Header) MsgAcceptAction {
+	opcode := int(dh.Bits>>11) & 0xF
+	if opcode != OpcodeStateful {
+		return DefaultMsgAcceptFunc(dh)
+	}
+
+	// RFC 8490, Section 5.4: If ... any of the count fields are not zero, then a FORMERR MUST be returned.
+	if dh.Qdcount != 0 || dh.Ancount != 0 || dh.Nscount != 0 || dh.Arcount != 0 {
+		return MsgReject
+	}
+
+	// RFC 8490, Section 5.4.1: If a DSO response message (QR=1) is received where the MESSAGE ID is zero,
+	// this is a fatal error and the recipient MUST forcibly abort the connection immediately.
+	if isResponse := dh.Bits&_QR != 0; dh.Id == 0 && isResponse {
+		return MsgAbort
+	}
+
 	return MsgAccept
 }

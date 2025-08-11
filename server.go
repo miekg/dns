@@ -210,6 +210,8 @@ type Server struct {
 	PacketConn net.PacketConn
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
+	// DSOHandler to invoke for RFC 8490 messages. Reject with RcodeNotImplemented if nil.
+	DSOHandler DSOHandler
 	// Default buffer size to use to read incoming UDP messages. If not set
 	// it defaults to MinMsgSize (512 B).
 	UDPSize int
@@ -286,7 +288,11 @@ func (srv *Server) init() {
 		srv.UDPSize = MinMsgSize
 	}
 	if srv.MsgAcceptFunc == nil {
-		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
+		if srv.DSOHandler != nil {
+			srv.MsgAcceptFunc = DefaultDSOMsgAcceptFunc
+		} else {
+			srv.MsgAcceptFunc = DefaultMsgAcceptFunc
+		}
 	}
 	if srv.MsgInvalidFunc == nil {
 		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
@@ -564,6 +570,12 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		w.writer = w
 	}
 
+	// w needs to be fully initialzied!
+	var dsow *dsoresponse
+	if srv.DSOHandler != nil {
+		dsow = newDSOResponse(w)
+	}
+
 	reader := Reader(defaultReader{srv})
 	if srv.DecorateReader != nil {
 		reader = srv.DecorateReader(reader)
@@ -581,13 +593,18 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		limit = maxTCPQueries
 	}
 
-	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
+	q := 0
+	for ; (q < limit || limit == -1) && srv.isStarted(); q++ {
 		m, err := reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
 			break
 		}
-		srv.serveDNS(m, w)
+		if dsow != nil {
+			srv.dispatchDNS(m, dsow)
+		} else {
+			srv.serveDNS(m, w)
+		}
 		if w.closed {
 			break // Close() was called
 		}
@@ -597,6 +614,11 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		// The first read uses the read timeout, the rest use the
 		// idle timeout.
 		timeout = idleTimeout
+	}
+
+	// The server is not going anywhere, just shedding clients.
+	if dsow != nil && q == limit && srv.isStarted() {
+		dsow.CloseDSO(time.Duration(0), RcodeSuccess)
 	}
 
 	if !w.hijacked {
@@ -623,6 +645,22 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 	wg.Done()
 }
 
+func (srv *Server) dispatchDNS(m []byte, dsow *dsoresponse) {
+	dh, off, err := unpackMsgHdr(m, 0)
+	if err != nil {
+		srv.MsgInvalidFunc(m, err)
+		// Let client hang, they are sending crap; any reply can be used to amplify.
+		return
+	}
+
+	switch opcode := int(dh.Bits>>11) & 0xF; opcode {
+	case OpcodeStateful:
+		srv.serveDSOWithHeader(dh, m, off, dsow)
+	default:
+		srv.serveDNSWithHeader(dh, m, off, dsow.response)
+	}
+}
+
 func (srv *Server) serveDNS(m []byte, w *response) {
 	dh, off, err := unpackMsgHdr(m, 0)
 	if err != nil {
@@ -631,6 +669,10 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		return
 	}
 
+	srv.serveDNSWithHeader(dh, m, off, w)
+}
+
+func (srv *Server) serveDNSWithHeader(dh Header, m []byte, off int, w *response) {
 	req := new(Msg)
 	req.setHdr(dh)
 
@@ -662,6 +704,14 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 			srv.udpPool.Put(m[:srv.UDPSize])
 		}
 
+		return
+	case MsgAbort:
+		if w.udp != nil && cap(m) == srv.UDPSize {
+			srv.udpPool.Put(m[:srv.UDPSize])
+		}
+
+		setLinger(w.tcp, 0)
+		w.Close()
 		return
 	}
 
@@ -855,4 +905,17 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 		return &t
 	}
 	return nil
+}
+
+// setLinger calls SetLinger on the connection if it's supported.
+func setLinger(co net.Conn, sec int) {
+	if _, ok := co.(*net.UDPConn); ok {
+		return
+	}
+	if tlsCo, ok := co.(*tls.Conn); ok {
+		co = tlsCo.NetConn()
+	}
+	if lingerCo, ok := co.(interface{ SetLinger(sec int) error }); ok {
+		lingerCo.SetLinger(sec)
+	}
 }
