@@ -435,10 +435,10 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 				t.Errorf("expected negation %v, got %v", tt.negation, got.Negation)
 			}
 			if !tt.ip.Equal(got.Network.IP) {
-				t.Errorf("expected IP %02x, got %02x", tt.ip, got.Network.IP)
+				t.Errorf("expected IP %02x, got %02x", []byte(tt.ip), []byte(got.Network.IP))
 			}
 			if !bytes.Equal(got.Network.Mask, tt.mask) {
-				t.Errorf("expected mask %02x, got %02x", tt.mask, got.Network.Mask)
+				t.Errorf("expected mask %02x, got %02x", []byte(tt.mask), []byte(got.Network.Mask))
 			}
 		})
 	}
@@ -584,10 +584,10 @@ func TestUnpackDataApl(t *testing.T) {
 			t.Errorf("[%d] expected negation %v, got %v", i, exp.Negation, got[i].Negation)
 		}
 		if !exp.Network.IP.Equal(got[i].Network.IP) {
-			t.Errorf("[%d] expected IP %02x, got %02x", i, exp.Network.IP, got[i].Network.IP)
+			t.Errorf("[%d] expected IP %02x, got %02x", i, []byte(exp.Network.IP), []byte(got[i].Network.IP))
 		}
 		if !bytes.Equal(got[i].Network.Mask, exp.Network.Mask) {
-			t.Errorf("[%d] expected mask %02x, got %02x", i, exp.Network.Mask, got[i].Network.Mask)
+			t.Errorf("[%d] expected mask %02x, got %02x", i, []byte(exp.Network.Mask), []byte(got[i].Network.Mask))
 		}
 	}
 }
