@@ -129,7 +129,10 @@ func TestSignVerify(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	privkey, _ := key.Generate(512)
+	privkey, err := key.Generate(1024)
+	if err != nil {
+		t.Fatal("failure to generate private key:", err)
+	}
 
 	// Fill in the values of the Sig, before signing
 	sig := new(RRSIG)
@@ -185,7 +188,10 @@ func TestShouldNotVerifyInvalidSig(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	privkey, _ := key.Generate(512)
+	privkey, err := key.Generate(1024)
+	if err != nil {
+		t.Fatal("failure to generate private key:", err)
+	}
 
 	normalSoa := getSoa()
 
@@ -278,7 +284,10 @@ func Test65534(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	privkey, _ := key.Generate(512)
+	privkey, err := key.Generate(1024)
+	if err != nil {
+		t.Fatal("failure to generate private key:", err)
+	}
 
 	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
@@ -361,7 +370,10 @@ func TestKeyRSA(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	priv, _ := key.Generate(512)
+	priv, err := key.Generate(1024)
+	if err != nil {
+		t.Fatal("failure to generate private key:", err)
+	}
 
 	soa := new(SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
