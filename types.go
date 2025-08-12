@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -252,9 +253,6 @@ var CertTypeToString = map[uint16]string{
 	CertURI:     "URI",
 	CertOID:     "OID",
 }
-
-// Prefix for IPv4 encoded as IPv6 address
-const ipv4InIPv6Prefix = "::ffff:"
 
 //go:generate go run types_generate.go
 
@@ -801,15 +799,11 @@ type AAAA struct {
 }
 
 func (rr *AAAA) String() string {
-	if rr.AAAA == nil {
+	addr, ok := netip.AddrFromSlice(rr.AAAA)
+	if !ok {
 		return rr.Hdr.String()
 	}
-
-	if rr.AAAA.To4() != nil {
-		return rr.Hdr.String() + ipv4InIPv6Prefix + rr.AAAA.String()
-	}
-
-	return rr.Hdr.String() + rr.AAAA.String()
+	return rr.Hdr.String() + addr.String()
 }
 
 // PX RR. See RFC 2163.
@@ -1583,21 +1577,10 @@ func (a *APLPrefix) str() string {
 
 	sb.WriteByte(':')
 
-	switch len(a.Network.IP) {
-	case net.IPv4len:
-		sb.WriteString(a.Network.IP.String())
-	case net.IPv6len:
-		// add prefix for IPv4-mapped IPv6
-		if v4 := a.Network.IP.To4(); v4 != nil {
-			sb.WriteString(ipv4InIPv6Prefix)
-		}
-		sb.WriteString(a.Network.IP.String())
-	}
-
-	sb.WriteByte('/')
-
-	prefix, _ := a.Network.Mask.Size()
-	sb.WriteString(strconv.Itoa(prefix))
+	addr, _ := netip.AddrFromSlice(a.Network.IP)
+	bits, _ := a.Network.Mask.Size()
+	prefix := netip.PrefixFrom(addr, bits)
+	sb.WriteString(prefix.String())
 
 	return sb.String()
 }

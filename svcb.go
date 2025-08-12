@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"sort"
 	"strconv"
 	"strings"
@@ -621,11 +622,11 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 	for len(b) > 0 {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e).To4()
-		if ip == nil {
-			return errors.New("bad svcbipv4hint: bad ip")
+		ip, err := netip.ParseAddr(e)
+		if err != nil || !ip.Is4() {
+			return errors.New("bad svcbipv4hint: expected ipv4")
 		}
-		hint = append(hint, ip)
+		hint = append(hint, ip.AsSlice())
 	}
 	s.Hint = hint
 	return nil
@@ -743,14 +744,11 @@ func (s *SVCBIPv6Hint) parse(b string) error {
 	for len(b) > 0 {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e)
-		if ip == nil {
-			return errors.New("bad svcbipv6hint: bad ip")
+		ip, err := netip.ParseAddr(e)
+		if err != nil || !ip.Is6() {
+			return errors.New("bad svcbipv6hint: expected ipv6")
 		}
-		if ip.To4() != nil {
-			return errors.New("bad svcbipv6hint: expected ipv6, got ipv4-mapped-ipv6")
-		}
-		hint = append(hint, ip)
+		hint = append(hint, ip.AsSlice())
 	}
 	s.Hint = hint
 	return nil
