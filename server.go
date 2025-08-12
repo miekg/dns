@@ -11,6 +11,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -59,15 +60,41 @@ type ResponseWriter interface {
 	Hijack()
 }
 
+// Interface additionally implemented by ResponseWriter when Server is configured
+// for query pipelining.
+//
+// When on TCP and with Server.TCPPipeline set call to Hijack is not immediate.
+// Handler must use WaitHijacked to ensure that Server is done with the connection.
+type PipelineResponseWriter interface {
+	// WaitHijacked waits until the Server detaches the connection.
+	//
+	// hijacked is true if and only if err is nil. It is false if context is cancelled.
+	// It may be false due to an internal error.
+	WaitHijacked(ctx context.Context) (hijacked bool, err error)
+}
+
 // A ConnectionStater interface is used by a DNS Handler to access TLS connection state
 // when available.
 type ConnectionStater interface {
 	ConnectionState() *tls.ConnectionState
 }
 
+// maybeAtomicBool is a common interface for atomic and non-atomic booleans.
+type maybeAtomicBool interface {
+	Load() bool
+	Store(bool)
+	CompareAndSwap(bool, bool) bool
+}
+
+// nonAtomicBool wraps bool to implement maybeAtomicBool.
+type nonAtomicBool struct {
+	bool
+}
+
 type response struct {
-	closed         bool // connection has been closed
-	hijacked       bool // connection has been hijacked by handler
+	closed         maybeAtomicBool // connection has been closed; atomic when pipelining
+	hijacked       maybeAtomicBool // connection has been hijacked by handler; atomic when pipelining
+	hijackedChan   chan struct{}   // non-nil when pipelining, closed after hijack is final
 	tsigTimersOnly bool
 	tsigStatus     error
 	tsigRequestMAC string
@@ -202,6 +229,8 @@ type Server struct {
 	Addr string
 	// if "tcp" or "tcp-tls" (DNS over TLS) it will invoke a TCP listener, otherwise an UDP one
 	Net string
+	// On TCP, enables concurrent calls to Handler.ServeDNS. UDP is always pipelined.
+	TCPPipeline bool
 	// TCP Listener to use, this is to aid in systemd's socket activation.
 	Listener net.Listener
 	// TLS connection configuration
@@ -558,6 +587,15 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 // Serve a new TCP connection.
 func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 	w := &response{tsigProvider: srv.tsigProvider(), tcp: rw}
+	if srv.TCPPipeline {
+		w.closed = &atomic.Bool{}
+		w.hijacked = &atomic.Bool{}
+		w.hijackedChan = make(chan struct{})
+		defer func() { close(w.hijackedChan) }()
+	} else {
+		w.closed = &nonAtomicBool{}
+		w.hijacked = &nonAtomicBool{}
+	}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -581,17 +619,30 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		limit = maxTCPQueries
 	}
 
+	// Track per-request serves. The group is discarded if connection is hijacked.
+	var pipelineWg sync.WaitGroup
+
 	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
 		m, err := reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
 			break
 		}
-		srv.serveDNS(m, w)
-		if w.closed {
+		if srv.TCPPipeline {
+			pipelineWg.Add(1)
+			// Per-request copy of response.
+			pipelineW := *w
+			go func() {
+				defer pipelineWg.Done()
+				srv.serveDNS(m, &pipelineW)
+			}()
+		} else {
+			srv.serveDNS(m, w)
+		}
+		if w.closed.Load() {
 			break // Close() was called
 		}
-		if w.hijacked {
+		if w.hijacked.Load() {
 			break // client will call Close() themselves
 		}
 		// The first read uses the read timeout, the rest use the
@@ -599,8 +650,9 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		timeout = idleTimeout
 	}
 
-	if !w.hijacked {
+	if !w.hijacked.Load() {
 		w.Close()
+		pipelineWg.Wait()
 	}
 
 	srv.lock.Lock()
@@ -612,7 +664,14 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 
 // Serve a new UDP request.
 func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
-	w := &response{tsigProvider: srv.tsigProvider(), udp: u, udpSession: udpSession, pcSession: pcSession}
+	w := &response{
+		closed:       &nonAtomicBool{},
+		hijacked:     &nonAtomicBool{},
+		tsigProvider: srv.tsigProvider(),
+		udp:          u,
+		udpSession:   udpSession,
+		pcSession:    pcSession,
+	}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -743,7 +802,7 @@ func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.
 func (w *response) WriteMsg(m *Msg) (err error) {
-	if w.closed {
+	if w.closed.Load() {
 		return &Error{err: "WriteMsg called after Close"}
 	}
 
@@ -766,9 +825,25 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 	return err
 }
 
+func (b *nonAtomicBool) Load() bool {
+	return b.bool
+}
+
+func (b *nonAtomicBool) Store(value bool) {
+	b.bool = value
+}
+
+func (b *nonAtomicBool) CompareAndSwap(old, new bool) bool {
+	if b.bool == old {
+		b.bool = new
+		return true
+	}
+	return false
+}
+
 // Write implements the ResponseWriter.Write method.
 func (w *response) Write(m []byte) (int, error) {
-	if w.closed {
+	if w.closed.Load() {
 		return 0, &Error{err: "Write called after Close"}
 	}
 
@@ -825,14 +900,13 @@ func (w *response) TsigStatus() error { return w.tsigStatus }
 func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
 
 // Hijack implements the ResponseWriter.Hijack method.
-func (w *response) Hijack() { w.hijacked = true }
+func (w *response) Hijack() { w.hijacked.Store(true) }
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
-	if w.closed {
+	if !w.closed.CompareAndSwap(false, true) {
 		return &Error{err: "connection already closed"}
 	}
-	w.closed = true
 
 	switch {
 	case w.udp != nil:
@@ -855,4 +929,17 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 		return &t
 	}
 	return nil
+}
+
+// WaitHijacked implements the PipelineResponseWriter.WaitHijacked method.
+func (w *response) WaitHijacked(ctx context.Context) (bool, error) {
+	if w.hijackedChan == nil {
+		return w.hijacked.Load(), &Error{"Server.TCPPipeline is unset"}
+	}
+	select {
+	case <-ctx.Done():
+		return w.hijacked.Load(), ctx.Err()
+	case <-w.hijackedChan:
+		return w.hijacked.Load(), nil
+	}
 }
