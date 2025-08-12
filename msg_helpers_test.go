@@ -265,6 +265,13 @@ func TestPackDataAplPrefix(t *testing.T) {
 			net.CIDRMask(22, 32),
 			[]byte{0x00, 0x01, 0x16, 0x03, 198, 51, 100}, // 1:198.51.100.0/22
 		},
+		{
+			"ipv4-mapped ipv6",
+			false,
+			[]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 0, 2, 0},
+			net.CIDRMask(120, 128),
+			[]byte{0x00, 0x02, 0x78, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 0, 2}, // 2:0::ffff:192.0.2.0/120
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -272,7 +279,7 @@ func TestPackDataAplPrefix(t *testing.T) {
 				Negation: tt.negation,
 				Network:  net.IPNet{IP: tt.ip, Mask: tt.mask},
 			}
-			out := make([]byte, 16)
+			out := make([]byte, 100)
 			off, err := packDataAplPrefix(ap, out, 0)
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
@@ -420,6 +427,13 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 			false,
 			net.ParseIP("0.0.0.0").To4(),
 			net.CIDRMask(0, 32),
+		},
+		{
+			"2:::ffff:192.0.2.0/120",
+			[]byte{0x00, 0x02, 0x78, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 0, 2},
+			false,
+			net.ParseIP("192.0.2.0").To16(),
+			net.CIDRMask(120, 128),
 		},
 	}
 	for _, tt := range tests {
