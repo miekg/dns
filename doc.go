@@ -288,5 +288,27 @@ the shared secret approach in TSIG. Supported algorithms: ECDSAP256SHA256,
 ECDSAP384SHA384, RSASHA1, RSASHA256 and RSASHA512.
 
 Signing subsequent messages in multi-message sessions is not implemented.
+
+# DNS STATEFUL OPERATIONS (DSO)
+
+RFC 8490 introduces mechanism to manage stateful DNS connections over streaming protocols.
+New DNS message format (opcode = 6) trades conventional RRs for DSO TLVs:
+
+	m := new(Msg)
+	SetDSORequest(m, Id())
+	m.Stateful = []DSO{
+		&DSOKeepAlive{DSOInactivityTimeoutNever, DSOKeepAliveIntervalRecommened},
+		&DSOEncryptionPadding{make([]byte, 492)}
+	}
+
+where Msg.Stateful is a slice of DSO interfaces.
+
+A DSO message must have no RRs. The library won't stay in the way if the user tries
+to pack one. However, during unpacking format requirements are enforced.
+
+There are three general kinds of DSO messages: requests, responses and unidirectionals.
+Order of TLVs is significant and sets type of a given DSO message. Specification of
+each TLV explains where and when it can be used. The IsValidDSOMsg function can validate
+whether message is sound wire-wise, but it's on the user to follow protocol rules.
 */
 package dns

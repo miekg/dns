@@ -61,6 +61,8 @@ var (
 	ErrLongDomain    error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
 	ErrNoSig         error = &Error{err: "no signature found"}
 	ErrPrivKey       error = &Error{err: "bad private key"}
+	ErrResponse      error = &Error{err: "bad QR bit"}
+	ErrOpcode        error = &Error{err: "bad opcode"}
 	ErrRcode         error = &Error{err: "bad rcode"}
 	ErrRdata         error = &Error{err: "bad rdata"}
 	ErrRRset         error = &Error{err: "bad rrset"}
@@ -113,6 +115,7 @@ type Msg struct {
 	Answer   []RR       // Holds the RR(s) of the answer section.
 	Ns       []RR       // Holds the RR(s) of the authority section.
 	Extra    []RR       // Holds the RR(s) of the additional section.
+	Stateful []DSO      // Holds the Stateful TLVs
 }
 
 // ClassToString is a maps Classes to strings for each CLASS wire type.
@@ -127,11 +130,12 @@ var ClassToString = map[uint16]string{
 
 // OpcodeToString maps Opcodes to strings.
 var OpcodeToString = map[int]string{
-	OpcodeQuery:  "QUERY",
-	OpcodeIQuery: "IQUERY",
-	OpcodeStatus: "STATUS",
-	OpcodeNotify: "NOTIFY",
-	OpcodeUpdate: "UPDATE",
+	OpcodeQuery:    "QUERY",
+	OpcodeIQuery:   "IQUERY",
+	OpcodeStatus:   "STATUS",
+	OpcodeNotify:   "NOTIFY",
+	OpcodeUpdate:   "UPDATE",
+	OpcodeStateful: "STATEFUL",
 }
 
 // RcodeToString maps Rcodes to strings.
@@ -819,6 +823,12 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 			return nil, err
 		}
 	}
+	for _, r := range dns.Stateful {
+		_, off, err = PackDSO(r, msg, off, compression, compress)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return msg[:off], nil
 }
 
@@ -828,7 +838,7 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	// when responding with REFUSED for instance.
 	if off == len(msg) {
 		// reset sections before returning
-		dns.Question, dns.Answer, dns.Ns, dns.Extra = nil, nil, nil, nil
+		dns.Question, dns.Answer, dns.Ns, dns.Extra, dns.Stateful = nil, nil, nil, nil, nil
 		return nil
 	}
 
@@ -863,6 +873,10 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	}
 	// The header counts might have been wrong so we need to update it
 	dh.Arcount = uint16(len(dns.Extra))
+
+	if err == nil && IsDSOHeader(dh) {
+		dns.Stateful, _, err = unpackDSOslice(msg, off)
+	}
 
 	// Set extended Rcode
 	if opt := dns.IsEdns0(); opt != nil {
@@ -952,14 +966,29 @@ func (dns *Msg) String() string {
 			}
 		}
 	}
+	if len(dns.Stateful) > 0 {
+		s += "\n;; DSO SECTION:\n"
+		for _, v := range dns.Stateful {
+			s += fmt.Sprintf("%s: %s\n", dsoTypeToString(v.DSOType()), v)
+		}
+	}
+
 	return s
 }
 
 // isCompressible returns whether the msg may be compressible.
 func (dns *Msg) isCompressible() bool {
-	// If we only have one question, there is nothing we can ever compress.
-	return len(dns.Question) > 1 || len(dns.Answer) > 0 ||
-		len(dns.Ns) > 0 || len(dns.Extra) > 0
+	switch {
+	case dns.MsgHdr.Opcode == OpcodeStateful:
+		if isDSOCompressible(dns) {
+			return true
+		}
+		fallthrough
+	default:
+		// If we only have one question, there is nothing we can ever compress.
+		return len(dns.Question) > 1 || len(dns.Answer) > 0 ||
+			len(dns.Ns) > 0 || len(dns.Extra) > 0
+	}
 }
 
 // Len returns the message length when in (un)compressed wire format.
@@ -994,6 +1023,11 @@ func msgLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
 		}
 	}
 	for _, r := range dns.Extra {
+		if r != nil {
+			l += r.len(l, compression)
+		}
+	}
+	for _, r := range dns.Stateful {
 		if r != nil {
 			l += r.len(l, compression)
 		}
@@ -1084,6 +1118,7 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	r1.Answer, rrArr = rrArr[:0:len(dns.Answer)], rrArr[len(dns.Answer):]
 	r1.Ns, rrArr = rrArr[:0:len(dns.Ns)], rrArr[len(dns.Ns):]
 	r1.Extra = rrArr[:0:len(dns.Extra)]
+	r1.Stateful = make([]DSO, 0, len(dns.Stateful))
 
 	for _, r := range dns.Answer {
 		r1.Answer = append(r1.Answer, r.copy())
@@ -1095,6 +1130,10 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 
 	for _, r := range dns.Extra {
 		r1.Extra = append(r1.Extra, r.copy())
+	}
+
+	for _, r := range dns.Stateful {
+		r1.Stateful = append(r1.Stateful, r.Copy())
 	}
 
 	return r1
