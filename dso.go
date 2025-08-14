@@ -322,9 +322,12 @@ const (
 	DSOInactivityTimeoutNever	   = 0xFFFFFFFF
 )
 
-// Section 7.1: Keepalive TLV
+// RFC 8490, Section 7.1: Keepalive TLV.
 type DSOKeepAlive struct {
+	// This is the timeout at which the client MUST begin closing an inactive DSO Session.
 	InactivityTimeout uint32
+	// This is the interval at which a client MUST generate DSO keepalive traffic to maintain
+	// connection state.
 	KeepAliveInterval uint32
 }
 
@@ -414,8 +417,10 @@ func (tlv *DSOKeepAlive) unpack(buf []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-// RFC 8490, Section 7.2: Retry Delay TLV
+// RFC 8490, Section 7.2: Retry Delay TLV.
 type DSORetryDelay struct {
+	// A time value within which the initiator MUST NOT retry this operation or retry connecting
+	// to this server.
 	RetryDelay uint32
 }
 
@@ -490,7 +495,10 @@ func (tlv *DSORetryDelay) unpack(buf []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-// RFC 8490, Section 7.3: Encryption Padding TLV
+// RFC 8490, Section 7.3: Encryption Padding TLV.
+//
+// Even the empty TLV adds 4 bytes due to header.
+// See also RFC 8467.
 type DSOEncryptionPadding struct {
 	Padding []byte
 }
@@ -570,6 +578,7 @@ func (tlv *DSOEncryptionPadding) unpack(buf []byte, off int) (int, error) {
 // DSOLocal is intended for experimental/private use as well as for unrecognized TLVs.
 type DSOLocal struct {
 	dsotype uint16
+	// TLV data in wire format verbatim.
 	Data    []byte
 }
 
@@ -622,10 +631,20 @@ func (tlv *DSOLocal) unpack(buf []byte, off int) (int, error) {
 	return len(buf), nil
 }
 
-// RFC 8765, Section 6.2: DNS Push Notification SUBSCRIBE
+// RFC 8765, Section 6.2: Subscribe TLV.
 type DSO8765Subscribe struct {
+	// Domain name of RR that subscriber wants.
+	//
+	// DNS wildcarding is not supported, case insensitivity applies, CNAME matches
+	// only a CNAME record.
 	Name   string
+	// Type of RR that subscriber wants.
+	//
+	// TypeANY (255) is interepreted to mean "ALL".
 	Rrtype uint16
+	// Class of RR that subscriber wants.
+	//
+	// ClassANY (255) is interpreted to mean "ALL".
 	Class  uint16
 }
 
@@ -729,8 +748,11 @@ func (tlv *DSO8765Subscribe) unpack(buf []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-// RFC 8765, Section 6.3: DNS Push Notification Updates
+// RFC 8765, Section 6.3: Push TLV.
 type DSO8765Push struct {
+	// Changes (at least one) in RRs the receiver is subscribed to.
+	//
+	// RR's TTL value may carry special meaning, see RFC 8765, Section 6.3.1 for details.
 	Change []RR
 }
 
@@ -868,8 +890,9 @@ func (tlv *DSO8765Push) unpack(buf []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-// RFC 8765, Section 6.4: DNS Push Notification UNSUBSCRIBE
+// RFC 8765, Section 6.4: Unsubscribe TLV.
 type DSO8765Unsubscribe struct {
+	// ID of the previously sent Subscribe request message.
 	SubscribeId uint16
 }
 
@@ -944,8 +967,13 @@ func (tlv *DSO8765Unsubscribe) unpack(buf []byte, off int) (off1 int, err error)
 	return off, nil
 }
 
-// RFC 8765, Section 6.5: DNS Push Notification RECONFIRM
+// RFC 8765, Section 6.5: Reconfirm TLV.
 type DSO8765Reconfirm struct {
+	// RR that the sender belives to be stale.
+	//
+	// RR's type must not be TypeANY (255), class must not be ClassANY (255), wildcarding
+	// is not supported, case insensitivity applies, CNAME matches only a CNAME record.
+	// RR's TTL is ignored and Rdlength is re-calculated.
 	Rr RR
 }
 
