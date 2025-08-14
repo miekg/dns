@@ -748,6 +748,21 @@ func (tlv *DSO8765Subscribe) unpack(buf []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
+const (
+	// RFC 8765, Section 6.3.1: If the TTL has the value 0xFFFFFFFF, then the DNS Resource Record
+	// with the given name, type, class, and RDATA is removed.
+	DSO8765PushTTLRemove 		   = 0xFFFFFFFF
+	// RFC 8765, Section 6.3.1: If the TTL has the value 0xFFFFFFFE, then this is a 'collective'
+	// remove notification.
+	DSO8765PushTTLCollectiveRemove = 0xFFFFFFFE
+	// If the TTL is in the range 0 to 2,147,483,647 seconds (0 to 231 - 1, or 0x7FFFFFFF),
+	// then a new DNS Resource Record with the given name, type, class, and RDATA is added.
+	DSO8765PushTTLAddMin = 0
+	// If the TTL is in the range 0 to 2,147,483,647 seconds (0 to 231 - 1, or 0x7FFFFFFF),
+	// then a new DNS Resource Record with the given name, type, class, and RDATA is added.
+	DSO8765PushTTLAddMax = 0x7FFFFFFF
+)
+
 // RFC 8765, Section 6.3: Push TLV.
 type DSO8765Push struct {
 	// Changes (at least one) in RRs the receiver is subscribed to.
