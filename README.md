@@ -3,8 +3,10 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/miekg/dns)](https://goreportcard.com/report/miekg/dns)
 [![](https://godoc.org/github.com/miekg/dns?status.svg)](https://godoc.org/github.com/miekg/dns)
 
-A dnsv2 is in the works. Development happens at <https://codeberg.org/miekg/dns>, check it out if you want to
+DNS version 2 is now available at <https://codeberg.org/miekg/dns>, check it out if you want to
 help shape the next 15 years of the Go DNS package.
+
+The version here will see no new features and less and less development.
 
 # Alternative (more granular) approach to a DNS library
 
