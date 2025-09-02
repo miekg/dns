@@ -265,6 +265,13 @@ func TestPackDataAplPrefix(t *testing.T) {
 			net.CIDRMask(22, 32),
 			[]byte{0x00, 0x01, 0x16, 0x03, 198, 51, 100}, // 1:198.51.100.0/22
 		},
+		{
+			"ipv4-mapped ipv6",
+			false,
+			[]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 0, 2, 0},
+			net.CIDRMask(120, 128),
+			[]byte{0x00, 0x02, 0x78, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 0, 2}, // 2:0::ffff:192.0.2.0/120
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -272,7 +279,7 @@ func TestPackDataAplPrefix(t *testing.T) {
 				Negation: tt.negation,
 				Network:  net.IPNet{IP: tt.ip, Mask: tt.mask},
 			}
-			out := make([]byte, 16)
+			out := make([]byte, 100)
 			off, err := packDataAplPrefix(ap, out, 0)
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
@@ -421,6 +428,13 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 			net.ParseIP("0.0.0.0").To4(),
 			net.CIDRMask(0, 32),
 		},
+		{
+			"2:::ffff:192.0.2.0/120",
+			[]byte{0x00, 0x02, 0x78, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 0, 2},
+			false,
+			net.ParseIP("192.0.2.0").To16(),
+			net.CIDRMask(120, 128),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -435,10 +449,10 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 				t.Errorf("expected negation %v, got %v", tt.negation, got.Negation)
 			}
 			if !tt.ip.Equal(got.Network.IP) {
-				t.Errorf("expected IP %02x, got %02x", tt.ip, got.Network.IP)
+				t.Errorf("expected IP %02x, got %02x", []byte(tt.ip), []byte(got.Network.IP))
 			}
 			if !bytes.Equal(got.Network.Mask, tt.mask) {
-				t.Errorf("expected mask %02x, got %02x", tt.mask, got.Network.Mask)
+				t.Errorf("expected mask %02x, got %02x", []byte(tt.mask), []byte(got.Network.Mask))
 			}
 		})
 	}
@@ -584,10 +598,10 @@ func TestUnpackDataApl(t *testing.T) {
 			t.Errorf("[%d] expected negation %v, got %v", i, exp.Negation, got[i].Negation)
 		}
 		if !exp.Network.IP.Equal(got[i].Network.IP) {
-			t.Errorf("[%d] expected IP %02x, got %02x", i, exp.Network.IP, got[i].Network.IP)
+			t.Errorf("[%d] expected IP %02x, got %02x", i, []byte(exp.Network.IP), []byte(got[i].Network.IP))
 		}
 		if !bytes.Equal(got[i].Network.Mask, exp.Network.Mask) {
-			t.Errorf("[%d] expected mask %02x, got %02x", i, exp.Network.Mask, got[i].Network.Mask)
+			t.Errorf("[%d] expected mask %02x, got %02x", i, []byte(exp.Network.Mask), []byte(got[i].Network.Mask))
 		}
 	}
 }
