@@ -31,12 +31,21 @@ const (
 )
 
 func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
+	opcode := int(dh.Bits>>11) & 0xF
+	if opcode == OpcodeStateful {
+		// RFC 8490 messages cannot have "standard" RRs.
+		if dh.Qdcount != 0 || dh.Ancount != 0 || dh.Nscount != 0 || dh.Arcount != 0 {
+			return MsgReject
+		}
+
+		return MsgAccept
+	}
+
 	if isResponse := dh.Bits&_QR != 0; isResponse {
 		return MsgIgnore
 	}
 
 	// Don't allow dynamic updates, because then the sections can contain a whole bunch of RRs.
-	opcode := int(dh.Bits>>11) & 0xF
 	if opcode != OpcodeQuery && opcode != OpcodeNotify {
 		return MsgRejectNotImplemented
 	}
