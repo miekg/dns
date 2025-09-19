@@ -84,24 +84,23 @@ type RRJSON struct {
 //	  "data": { "a":"93.184.216.34" }
 //	}
 //
-// AAAA: {"aaaa":"2001:db8::1"}
-// CNAME: {"target":"alias.example."}
-// NS: {"ns":"ns1.example."}
-// PTR: {"ptr":"host.example."}
-// TXT: {"txt":["chunk1","chunk2"]}
-// MX: {"preference":10, "mx":"mail.example."}
-// SRV: {"priority":0, "weight":5, "port":443, "target":"svc.example."}
-// SOA: {"ns":"ns1.", "mbox":"hostmaster.", "serial":1, "refresh":7200, "retry":900, "expire":1209600, "minttl":300}
-// CAA: {"flag":0, "tag":"issue", "value":"letsencrypt.org"}
-// NAPTR: {"order":100, "preference":50, "flags":"s", "services":"SIP+D2U", "regexp":"", "replacement":"_sip._udp.example."}
-// DS: {"key_tag":12345, "algorithm":8, "digest_type":2, "digest":"...hex..."}
-// DNSKEY: {"flags":257, "protocol":3, "algorithm":8, "public_key":"base64..."}
-// RRSIG: {"type_covered":"A", "algorithm":8, "labels":2, "original_ttl":300,
-//
-//	"expiration": 1735689600, "inception": 1733097600, "key_tag":12345,
-//	"signer_name":"example.", "signature":"base64..."}
-//
-// TLSA: {"usage":3, "selector":1, "matching_type":1, "cert_data":"hex or base64"}
+//	AAAA: {"aaaa":"2001:db8::1"}
+//	CNAME: {"target":"alias.example."}
+//	NS: {"ns":"ns1.example."}
+//	PTR: {"ptr":"host.example."}
+//	TXT: {"txt":["chunk1","chunk2"]}
+//	MX: {"preference":10, "mx":"mail.example."}
+//	SRV: {"priority":0, "weight":5, "port":443, "target":"svc.example."}
+//	SOA: {"ns":"ns1.", "mbox":"hostmaster.", "serial":1, "refresh":7200, "retry":900, "expire":1209600, "minttl":300}
+//	CAA: {"flag":0, "tag":"issue", "value":"letsencrypt.org"}
+//	NAPTR: {"order":100, "preference":50, "flags":"s", "services":"SIP+D2U", "regexp":"", "replacement":"_sip._udp.example."}
+//	DS: {"key_tag":12345, "algorithm":8, "digest_type":2, "digest":"...hex..."}
+//	DNSKEY: {"flags":257, "protocol":3, "algorithm":8, "public_key":"base64..."}
+//	TLSA: {"usage":3, "selector":1, "matching_type":1, "cert_data":"hex or base64"}
+//	RRSIG: {
+//		"type_covered":"A", "algorithm":8, "labels":2, "original_ttl":300,
+//		"expiration": 1735689600, "inception": 1733097600, "key_tag":12345,
+//		"signer_name":"example.", "signature":"base64..."}
 //
 // Notes
 //   - Type/class use standard mnemonics (e.g., "A", "AAAA", "IN").
