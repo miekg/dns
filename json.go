@@ -12,11 +12,11 @@ var _ json.Marshaler = &Msg{}
 var _ json.Unmarshaler = &Msg{}
 
 var (
-	ErrEmptyInput         = errors.New("dnsjson: empty input")
-	ErrInvalidJSON        = errors.New("dnsjson: invalid JSON")
-	ErrInvalidMessage     = errors.New("dnsjson: invalid message")
-	ErrQuestionQType      = errors.New("dnsjson: question qtype")
-	ErrQuestionQClass     = errors.New("dnsjson: question qclass")
+	ErrEmptyInput         = errors.New("empty input")
+	ErrInvalidJSON        = errors.New("invalid JSON")
+	ErrInvalidMessage     = errors.New("invalid message")
+	ErrQuestionQType      = errors.New("question qtype")
+	ErrQuestionQClass     = errors.New("question qclass")
 	ErrAnswerSection      = errors.New("answer")
 	ErrNsSection          = errors.New("ns")
 	ErrExtraSection       = errors.New("extra")
