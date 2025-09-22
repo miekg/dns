@@ -3,6 +3,7 @@ package dns
 import (
 	"errors"
 	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 )
@@ -338,21 +339,23 @@ func CanonicalName(s string) string {
 	}, Fqdn(s))
 }
 
-// Copied from the official Go code.
+// Copied from the official Go code and updated to use netip.ParseAddr.
 
 // ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP
 // address suitable for reverse DNS (PTR) record lookups or an error if it fails
 // to parse the IP address.
-func ReverseAddr(addr string) (arpa string, err error) {
-	ip := net.ParseIP(addr)
-	if ip == nil {
-		return "", &Error{err: "unrecognized address: " + addr}
+func ReverseAddr(s string) (arpa string, err error) {
+	addr, err := netip.ParseAddr(s)
+	if err != nil {
+		return "", &Error{err: "unrecognized address: " + s}
 	}
-	if v4 := ip.To4(); v4 != nil {
+	ip := addr.AsSlice()
+
+	if addr.Is4() {
 		buf := make([]byte, 0, net.IPv4len*4+len("in-addr.arpa."))
 		// Add it, in reverse, to the buffer
-		for i := len(v4) - 1; i >= 0; i-- {
-			buf = strconv.AppendInt(buf, int64(v4[i]), 10)
+		for i := len(ip) - 1; i >= 0; i-- {
+			buf = strconv.AppendInt(buf, int64(ip[i]), 10)
 			buf = append(buf, '.')
 		}
 		// Append "in-addr.arpa." and return (buf already has the final .)

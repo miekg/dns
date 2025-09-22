@@ -1888,6 +1888,10 @@ func TestParseAPLErrors(t *testing.T) {
 			"no family",
 			". APL 0.0.0.0/0",
 		},
+		{
+			"ipv4-mapped ipv6 as ipv4",
+			". APL 1:::ffff:192.0.2.0/120",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
