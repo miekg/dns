@@ -59,6 +59,12 @@ type ResponseWriter interface {
 	Hijack()
 }
 
+// ResponseWriterBackports is used for backports from dnsv2.
+type ResponseWriterBackports interface {
+	// Conn returns the underlaying connection.
+	Conn() net.Conn
+}
+
 // A ConnectionStater interface is used by a DNS Handler to access TLS connection state
 // when available.
 type ConnectionStater interface {
@@ -853,6 +859,16 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 	if v, ok := w.tcp.(tlsConnectionStater); ok {
 		t := v.ConnectionState()
 		return &t
+	}
+	return nil
+}
+
+func (w *response) Conn() net.Conn {
+	if w.tcp != nil {
+		return w.tcp
+	}
+	if w.udp != nil {
+		return w.udp.(net.Conn)
 	}
 	return nil
 }
