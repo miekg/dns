@@ -25,6 +25,7 @@ const (
 	EDNS0PADDING      = 0xc     // EDNS0 padding (See RFC 7830)
 	EDNS0EDE          = 0xf     // EDNS0 extended DNS errors (See RFC 8914)
 	EDNS0REPORTING    = 0x12    // EDNS0 reporting (See RFC 9567)
+	EDNS0ZONEVERSION  = 0x13    // EDNS0 Zone Version (See RFC 9660)
 	EDNS0LOCALSTART   = 0xFDE9  // Beginning of range reserved for local/experimental use (See RFC 6891)
 	EDNS0LOCALEND     = 0xFFFE  // End of range reserved for local/experimental use (See RFC 6891)
 	_DO               = 1 << 15 // DNSSEC OK
@@ -63,6 +64,8 @@ func makeDataOpt(code uint16) EDNS0 {
 		return new(EDNS0_ESU)
 	case EDNS0REPORTING:
 		return new(EDNS0_REPORTING)
+	case EDNS0ZONEVERSION:
+		return new(EDNS0_ZONEVERSION)
 	default:
 		e := new(EDNS0_LOCAL)
 		e.Code = code
@@ -132,6 +135,8 @@ func (rr *OPT) String() string {
 			s += "\n; ESU: " + o.String()
 		case *EDNS0_REPORTING:
 			s += "\n; REPORT-CHANNEL: " + o.String()
+		case *EDNS0_ZONEVERSION:
+			s += "\n; ZONEVERSION: " + o.String()
 		}
 	}
 	return s
@@ -904,5 +909,50 @@ func (e *EDNS0_REPORTING) unpack(b []byte) error {
 		return fmt.Errorf("bad agent domain: %w", err)
 	}
 	e.AgentDomain = domain
+	return nil
+}
+
+// EDNS0_ZONEVERSION implements the EDNS0 Zone Version option (RFC 9660).
+type EDNS0_ZONEVERSION struct {
+	// always EDNS0ZONEVERSION (19)
+	Code uint16
+	// An unsigned 1-octet Label Count indicating
+	// the number of labels for the name of the zone that VERSION value refers to.
+	LabelCount uint8
+	// An unsigned 1-octet type number distinguishing the format and meaning of version.
+	// 0 SOA-SERIAL, 1-245 Unassigned, 246-255 Reserved for private use, see RFC 9660.
+	Type uint8
+	// An opaque octet string conveying the zone version data (VERSION).
+	Version string
+}
+
+func (e *EDNS0_ZONEVERSION) Option() uint16 { return EDNS0ZONEVERSION }
+func (e *EDNS0_ZONEVERSION) String() string { return e.Version }
+func (e *EDNS0_ZONEVERSION) copy() EDNS0 {
+	return &EDNS0_ZONEVERSION{e.Code, e.LabelCount, e.Type, e.Version}
+}
+func (e *EDNS0_ZONEVERSION) pack() ([]byte, error) {
+	b := []byte{
+		// first octet label count
+		e.LabelCount,
+		// second octet is type
+		e.Type,
+	}
+	if len(e.Version) > 0 {
+		b = append(b, []byte(e.Version)...)
+	}
+	return b, nil
+}
+func (e *EDNS0_ZONEVERSION) unpack(b []byte) error {
+	if len(b) < 2 {
+		return ErrBuf
+	}
+	e.LabelCount = b[0]
+	e.Type = b[1]
+	if len(b) > 2 {
+		e.Version = string(b[2:])
+	} else {
+		e.Version = ""
+	}
 	return nil
 }

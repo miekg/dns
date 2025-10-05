@@ -203,6 +203,7 @@ _all of them_
 - 9460 - SVCB and HTTPS Records
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
+- 9660 - DNS Zone Version (ZONEVERSION) Option
 - Draft - Compact Denial of Existence in DNSSEC
 
 ## Loosely Based Upon
