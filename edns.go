@@ -80,18 +80,17 @@ type OPT struct {
 }
 
 func (rr *OPT) String() string {
-	s := "\n;; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
+	s := "\n;; OPT PSEUDOSECTION:"
+	s += "\n; EDNS: version: " + strconv.Itoa(int(rr.Version())) + ", flags:"
 	if rr.Do() {
-		if rr.Co() {
-			s += "flags: do, co; "
-		} else {
-			s += "flags: do; "
-		}
-	} else {
-		s += "flags:; "
+		s += " do"
 	}
-	if rr.Hdr.Ttl&0x7FFF != 0 {
-		s += fmt.Sprintf("MBZ: 0x%04x, ", rr.Hdr.Ttl&0x7FFF)
+	if rr.Co() {
+		s += " co"
+	}
+	s += "; "
+	if z := rr.Z(); z != 0 {
+		s += fmt.Sprintf("MBZ: 0x%04x, ", z)
 	}
 	s += "udp: " + strconv.Itoa(int(rr.UDPSize()))
 
