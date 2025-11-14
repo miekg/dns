@@ -3,6 +3,8 @@ package dns
 import (
 	"crypto/tls"
 	"errors"
+	"math/rand"
+	"strings"
 	"testing"
 	"time"
 )
@@ -271,4 +273,222 @@ func TestTSIGNotSigned(t *testing.T) {
 	defer s.Shutdown()
 
 	axfrTestingSuiteWithMsgNotSigned(t, addrstr, tsigSecretProvider(tsigSecret))
+}
+
+func TestIxfr(t *testing.T) {
+	testcases := []struct {
+		name          string
+		expectedRRs   []RR
+		expectedError string
+	}{
+		{
+			"IncrementalFormat",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.4`),
+				testRR(`x.miek.nl.	60	IN	A	192.41.197.2`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.4`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.3`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+			},
+			"",
+		},
+		{
+			"CondensedIncrementalFormat",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.3`),
+				testRR(`x.miek.nl.	60	IN	A	192.41.197.2`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+			},
+			"",
+		},
+		{
+			"AxfrFormat",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	NS	ns.bytedance.net.`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.1`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.3`),
+				testRR(`x.miek.nl.	60	IN	A	192.41.197.2`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+			},
+			"",
+		},
+		{
+			"LatestSoaSerial",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 0 21600 7200 604800 3600`),
+			},
+			"",
+		},
+		{
+			"NoRRsInMiddle",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+			},
+			"",
+		},
+		{
+			"ErrorDifferenceSequence1",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 4 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.3`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+			},
+			ErrSoa.Error(),
+		},
+		{
+			"ErrorDifferenceSequence2",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.6`),
+			},
+			"i/o timeout",
+		},
+		{
+
+			"ErrorDifferenceSequence3",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.6`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+			},
+			ErrSoa.Error(),
+		},
+		{
+			"ErrorDifferenceSequence4",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+			},
+			ErrSoa.Error(),
+		},
+		{
+			"ErrorDifferenceSequence5",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 4 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.6`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.6`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 4 21600 7200 604800 3600`),
+			},
+			ErrSoa.Error(),
+		},
+		{
+			"ErrorDifferenceSequence6",
+			[]RR{
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 4 21600 7200 604800 3600`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 1 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.6`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 2 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.6`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 3 21600 7200 604800 3600`),
+				testRR(`x.miek.nl.	60	IN	A	133.69.136.5`),
+				testRR(`miek.nl.	0	IN	SOA	byteplus.com. miek.miek.nl. 4 21600 7200 604800 3600`),
+			},
+			ErrSoa.Error(),
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			expectedRRs := testcase.expectedRRs
+
+			HandleFunc("miek.nl", func(w ResponseWriter, req *Msg) {
+				ch := make(chan *Envelope)
+				tr := new(Transfer)
+
+				go tr.Out(w, req, ch)
+				limit := rand.Intn(len(expectedRRs)) + 1
+				i := 0
+				for i < len(expectedRRs) {
+					var rrs []RR
+					if i+limit > len(expectedRRs) {
+						rrs = expectedRRs[i:len(expectedRRs)]
+					} else {
+						rrs = expectedRRs[i : i+limit]
+					}
+					i += limit
+					ch <- &Envelope{RR: rrs}
+				}
+				close(ch)
+				w.Hijack()
+			})
+			defer HandleRemove("miek.nl")
+
+			s, addrstr, _, err := RunLocalTCPServer(":0")
+			if err != nil {
+				t.Fatalf("unable to run test server: %s", err)
+			}
+			defer s.Shutdown()
+
+			tr := new(Transfer)
+			m := new(Msg)
+			tr.Conn, err = Dial("tcp", addrstr)
+			if err != nil {
+				t.Fatal("failed to dial", err)
+			}
+			m.SetIxfr("miek.nl.", 1, ".", ".")
+			c, err := tr.In(m, addrstr)
+			if err != nil {
+				t.Fatal("failed to zone transfer in", err)
+			}
+
+			var rrs []RR
+
+			for msg := range c {
+				if msg.Error != nil {
+					if testcase.expectedError != "" {
+						if !strings.Contains(msg.Error.Error(), testcase.expectedError) {
+							t.Fatalf("bad ixfr: expected %v, got %v", testcase.expectedError, msg.Error)
+						}
+						return
+					}
+					t.Fatalf("failed to drain the channel: %v", msg.Error)
+				}
+				rrs = append(rrs, msg.RR...)
+			}
+
+			if testcase.expectedError != "" {
+				t.Fatalf("bad ixfr: expected %v, got %v", testcase.expectedError, rrs)
+			}
+
+			if len(rrs) != len(expectedRRs) {
+				t.Fatalf("bad ixfr: expected %v, got %v", rrs, expectedRRs)
+			}
+
+			for i, rr := range expectedRRs {
+				if !IsDuplicate(rr, rrs[i]) {
+					t.Fatalf("bad ixfr: expected %v, got %v", rr, rrs[i])
+				}
+			}
+		})
+	}
 }

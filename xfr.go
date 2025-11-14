@@ -139,8 +139,10 @@ func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
 
 func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 	var serial uint32 // The first serial seen is the current server serial
-	axfr := true
-	n := 0
+	axfr := false
+	rrCount := 0
+	currentSerial := uint32(0)
+	removeMode := false
 	qser := q.Ns[0].(*SOA).Serial
 	defer func() {
 		// First close the connection, then the channel. This allows functions blocked on
@@ -168,7 +170,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
 			return
 		}
-		if n == 0 {
+		if rrCount == 0 {
 			// Check if the returned answer is ok
 			if !isSOAFirst(in) {
 				c <- &Envelope{in.Answer, ErrSoa}
@@ -185,18 +187,59 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 		// Now we need to check each message for SOA records, to see what we need to do
 		t.tsigTimersOnly = true
 		for _, rr := range in.Answer {
+			rrCount++
 			if v, ok := rr.(*SOA); ok {
-				if v.Serial == serial {
-					n++
-					// quit if it's a full axfr or the servers' SOA is repeated the third time
-					if axfr && n == 2 || n == 3 {
-						c <- &Envelope{in.Answer, nil}
-						return
+				if rrCount == 1 {
+					// Already checked before
+					continue
+				} else if rrCount == 2 {
+					if v.Serial < serial {
+						// First difference sequence. remove first, add later
+						currentSerial = v.Serial
+						removeMode = true
+						continue
+					} else if !axfr {
+						// The serial of the second record is not less than the latest serial,
+						// so it may be axfr with empty content.
+						axfr = true
 					}
-				} else if axfr {
-					// it's an ixfr
-					axfr = false
 				}
+
+				if axfr {
+					var err error
+					// Check the serial of the last soa in axfr format
+					if v.Serial != serial {
+						err = ErrSoa
+					}
+					c <- &Envelope{in.Answer, err}
+					return
+				}
+
+				// The SOA of the differential sequence cannot exceed the latest serial
+				if v.Serial > serial || v.Serial < currentSerial {
+					c <- &Envelope{in.Answer, ErrSoa}
+					return
+				}
+
+				// Flip current mode
+				removeMode = !removeMode
+
+				// From one difference sequence to another difference sequence, the serial is the same
+				if removeMode && currentSerial != v.Serial {
+					c <- &Envelope{in.Answer, ErrSoa}
+					return
+				}
+
+				currentSerial = v.Serial
+
+				// The last soa of ixfr must be in removal mode and the serial is the latest
+				if removeMode && v.Serial == serial {
+					c <- &Envelope{in.Answer, nil}
+					return
+				}
+			} else if rrCount == 2 {
+				// If the second RR is not SOA, it is AXFR
+				axfr = true
 			}
 		}
 		c <- &Envelope{in.Answer, nil}
