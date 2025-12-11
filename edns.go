@@ -318,10 +318,6 @@ type EDNS0_SUBNET struct {
 func (e *EDNS0_SUBNET) Option() uint16 { return EDNS0SUBNET }
 
 func (e *EDNS0_SUBNET) pack() ([]byte, error) {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint16(b[0:], e.Family)
-	b[2] = e.SourceNetmask
-	b[3] = e.SourceScope
 	switch e.Family {
 	case 0:
 		// "dig" sets AddressFamily to 0 if SourceNetmask is also 0
@@ -329,16 +325,27 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 		if e.SourceNetmask != 0 {
 			return nil, errors.New("bad address family")
 		}
+		b := make([]byte, 4)
+		b[3] = e.SourceScope
+		return b, nil
 	case 1:
 		if e.SourceNetmask > net.IPv4len*8 {
 			return nil, errors.New("bad netmask")
 		}
-		if len(e.Address.To4()) != net.IPv4len {
+		ip4 := e.Address.To4()
+		if len(ip4) != net.IPv4len {
 			return nil, errors.New("bad address")
 		}
-		ip := e.Address.To4().Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv4len*8))
 		needLength := (e.SourceNetmask + 8 - 1) / 8 // division rounding up
-		b = append(b, ip[:needLength]...)
+		b := make([]byte, 4+needLength)
+		binary.BigEndian.PutUint16(b[0:], e.Family)
+		b[2] = e.SourceNetmask
+		b[3] = e.SourceScope
+		if needLength > 0 {
+			ip := ip4.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv4len*8))
+			copy(b[4:], ip[:needLength])
+		}
+		return b, nil
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 {
 			return nil, errors.New("bad netmask")
@@ -346,13 +353,19 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 		if len(e.Address) != net.IPv6len {
 			return nil, errors.New("bad address")
 		}
-		ip := e.Address.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv6len*8))
 		needLength := (e.SourceNetmask + 8 - 1) / 8 // division rounding up
-		b = append(b, ip[:needLength]...)
+		b := make([]byte, 4+needLength)
+		binary.BigEndian.PutUint16(b[0:], e.Family)
+		b[2] = e.SourceNetmask
+		b[3] = e.SourceScope
+		if needLength > 0 {
+			ip := e.Address.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv6len*8))
+			copy(b[4:], ip[:needLength])
+		}
+		return b, nil
 	default:
 		return nil, errors.New("bad address family")
 	}
-	return b, nil
 }
 
 func (e *EDNS0_SUBNET) unpack(b []byte) error {
