@@ -97,6 +97,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 - https://ifconfig.es
 - https://github.com/zmap/zdns
 - https://framagit.org/bortzmeyer/check-soa
+- https://github.com/jkerdreux-imt/owns
 
 Send pull request if you want to be listed here.
 
@@ -207,6 +208,7 @@ _all of them_
 - 9460 - SVCB and HTTPS Records
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
+- 9660 - DNS Zone Version (ZONEVERSION) Option
 - Draft - Compact Denial of Existence in DNSSEC
 
 ## Loosely Based Upon

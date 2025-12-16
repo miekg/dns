@@ -25,7 +25,7 @@ func TestSIG0(t *testing.T) {
 			keysize = 256
 		case ECDSAP384SHA384:
 			keysize = 384
-		case RSASHA512:
+		case RSASHA1, RSASHA256, RSASHA512:
 			keysize = 1024
 		}
 		pk, err := keyrr.Generate(keysize)
