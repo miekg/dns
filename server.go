@@ -246,6 +246,12 @@ type Server struct {
 	MsgAcceptFunc MsgAcceptFunc
 	// MsgInvalidFunc is optional, will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc MsgInvalidFunc
+	// MaxConcurrent is the maximum number of concurrent queries.
+	// A value of 0 means no limit.
+	MaxConcurrent int
+	// OnDropped is called when a connection or packet is dropped due to the MaxConcurrent limit.
+	// The remote address of the client is passed to the function.
+	OnDropped func(net.Addr)
 
 	// Shutdown handling
 	lock     sync.RWMutex
@@ -473,6 +479,11 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		close(srv.shutdown)
 	}()
 
+	var sem chan struct{}
+	if srv.MaxConcurrent > 0 {
+		sem = make(chan struct{}, srv.MaxConcurrent)
+	}
+
 	for srv.isStarted() {
 		rw, err := l.Accept()
 		if err != nil {
@@ -484,12 +495,30 @@ func (srv *Server) serveTCP(l net.Listener) error {
 			}
 			return err
 		}
+
+		if sem != nil {
+			select {
+			case sem <- struct{}{}:
+			default:
+				if srv.OnDropped != nil {
+					srv.OnDropped(rw.RemoteAddr())
+				}
+				rw.Close()
+				continue
+			}
+		}
+
 		srv.lock.Lock()
 		// Track the connection to allow unblocking reads on shutdown.
 		srv.conns[rw] = struct{}{}
 		srv.lock.Unlock()
 		wg.Add(1)
-		go srv.serveTCPConn(&wg, rw)
+		go func(conn net.Conn) {
+			if sem != nil {
+				defer func() { <-sem }()
+			}
+			srv.serveTCPConn(&wg, conn)
+		}(rw)
 	}
 
 	return nil
@@ -519,6 +548,11 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 		wg.Wait()
 		close(srv.shutdown)
 	}()
+
+	var sem chan struct{}
+	if srv.MaxConcurrent > 0 {
+		sem = make(chan struct{}, srv.MaxConcurrent)
+	}
 
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
@@ -550,8 +584,34 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			srv.MsgInvalidFunc(m, ErrShortRead)
 			continue
 		}
+
+		if sem != nil {
+			select {
+			case sem <- struct{}{}:
+			default:
+				if srv.OnDropped != nil {
+					var remoteAddr net.Addr
+					if sUDP != nil {
+						remoteAddr = sUDP.RemoteAddr()
+					} else {
+						remoteAddr = sPC
+					}
+					srv.OnDropped(remoteAddr)
+				}
+				if cap(m) == srv.UDPSize {
+					srv.udpPool.Put(m[:srv.UDPSize])
+				}
+				continue
+			}
+		}
+
 		wg.Add(1)
-		go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
+		go func(m []byte, l net.PacketConn, sUDP *SessionUDP, sPC net.Addr) {
+			if sem != nil {
+				defer func() { <-sem }()
+			}
+			srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
+		}(m, l, sUDP, sPC)
 	}
 
 	return nil

@@ -1536,3 +1536,399 @@ zDCJkckCgYEAndqM5KXGk5xYo+MAA1paZcbTUXwaWwjLU+XSRSSoyBEi5xMtfvUb
 kFsxKCqxAnBVGEWAvVZAiiTOxleQFjz5RnL0BQp9Lg2cQe+dvuUmIAA=
 -----END RSA PRIVATE KEY-----`)
 )
+
+// TestMaxConcurrentTCP tests that the MaxConcurrent limit is enforced for TCP connections.
+func TestMaxConcurrentTCP(t *testing.T) {
+	const maxConcurrent = 2
+	const totalRequests = 5
+
+	var (
+		activeRequests  int32
+		droppedCount    int32
+		maxActiveReached int32
+	)
+
+	// Handler that tracks concurrent requests
+	blockChan := make(chan struct{})
+	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
+		current := atomic.AddInt32(&activeRequests, 1)
+		defer atomic.AddInt32(&activeRequests, -1)
+
+		// Track the maximum concurrent requests we've seen
+		for {
+			max := atomic.LoadInt32(&maxActiveReached)
+			if current <= max || atomic.CompareAndSwapInt32(&maxActiveReached, max, current) {
+				break
+			}
+		}
+
+		// Block until test signals to continue
+		<-blockChan
+
+		m := new(Msg)
+		m.SetReply(req)
+		m.Extra = make([]RR, 1)
+		m.Extra[0] = &TXT{
+			Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0},
+			Txt: []string{"Hello world"},
+		}
+		if err := w.WriteMsg(m); err != nil {
+			t.Errorf("WriteMsg failed: %v", err)
+		}
+	})
+	defer HandleRemove("example.com.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.MaxConcurrent = maxConcurrent
+		srv.OnDropped = func(addr net.Addr) {
+			atomic.AddInt32(&droppedCount, 1)
+		}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer func() {
+		if err := s.Shutdown(); err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+	}()
+
+	// Launch goroutines to make concurrent requests
+	var wg sync.WaitGroup
+	errChan := make(chan error, totalRequests)
+
+	for i := 0; i < totalRequests; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c := &Client{Net: "tcp", Timeout: 2 * time.Second}
+			m := new(Msg)
+			m.SetQuestion("example.com.", TypeTXT)
+			_, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				errChan <- err
+			}
+		}()
+	}
+
+	// Wait a bit to let requests pile up
+	time.Sleep(200 * time.Millisecond)
+
+	// Verify that we have exactly maxConcurrent active requests
+	active := atomic.LoadInt32(&activeRequests)
+	if active != maxConcurrent {
+		t.Errorf("expected %d active requests, got %d", maxConcurrent, active)
+	}
+
+	// Release all blocked handlers
+	close(blockChan)
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+	close(errChan)
+
+	// Count errors (these would be from dropped connections)
+	errorCount := 0
+	for range errChan {
+		errorCount++
+	}
+
+	// Verify that some connections were dropped
+	dropped := atomic.LoadInt32(&droppedCount)
+	expectedDropped := int32(totalRequests - maxConcurrent)
+	if dropped != expectedDropped {
+		t.Errorf("expected %d dropped connections, got %d", expectedDropped, dropped)
+	}
+
+	// Verify max active never exceeded the limit
+	maxActive := atomic.LoadInt32(&maxActiveReached)
+	if maxActive > maxConcurrent {
+		t.Errorf("max concurrent limit exceeded: limit=%d, actual=%d", maxConcurrent, maxActive)
+	}
+}
+
+// TestMaxConcurrentUDP tests that the MaxConcurrent limit is enforced for UDP packets.
+func TestMaxConcurrentUDP(t *testing.T) {
+	const maxConcurrent = 2
+	const totalRequests = 5
+
+	var (
+		activeRequests  int32
+		droppedCount    int32
+		maxActiveReached int32
+	)
+
+	// Handler that tracks concurrent requests
+	blockChan := make(chan struct{})
+	HandleFunc("udp.example.com.", func(w ResponseWriter, req *Msg) {
+		current := atomic.AddInt32(&activeRequests, 1)
+		defer atomic.AddInt32(&activeRequests, -1)
+
+		// Track the maximum concurrent requests we've seen
+		for {
+			max := atomic.LoadInt32(&maxActiveReached)
+			if current <= max || atomic.CompareAndSwapInt32(&maxActiveReached, max, current) {
+				break
+			}
+		}
+
+		// Block until test signals to continue
+		<-blockChan
+
+		m := new(Msg)
+		m.SetReply(req)
+		m.Extra = make([]RR, 1)
+		m.Extra[0] = &TXT{
+			Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0},
+			Txt: []string{"Hello world"},
+		}
+		if err := w.WriteMsg(m); err != nil {
+			t.Errorf("WriteMsg failed: %v", err)
+		}
+	})
+	defer HandleRemove("udp.example.com.")
+
+	s, addrstr, _, err := RunLocalUDPServer(":0", func(srv *Server) {
+		srv.MaxConcurrent = maxConcurrent
+		srv.OnDropped = func(addr net.Addr) {
+			atomic.AddInt32(&droppedCount, 1)
+		}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer func() {
+		if err := s.Shutdown(); err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+	}()
+
+	// Launch goroutines to make concurrent requests
+	var wg sync.WaitGroup
+
+	for i := 0; i < totalRequests; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c := &Client{Net: "udp", Timeout: 2 * time.Second}
+			m := new(Msg)
+			m.SetQuestion("udp.example.com.", TypeTXT)
+			_, _, _ = c.Exchange(m, addrstr)
+		}()
+	}
+
+	// Wait a bit to let requests pile up
+	time.Sleep(200 * time.Millisecond)
+
+	// Verify that we have at most maxConcurrent active requests
+	active := atomic.LoadInt32(&activeRequests)
+	if active > maxConcurrent {
+		t.Errorf("expected at most %d active requests, got %d", maxConcurrent, active)
+	}
+
+	// Release all blocked handlers
+	close(blockChan)
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Verify that some packets were dropped
+	dropped := atomic.LoadInt32(&droppedCount)
+	expectedDropped := int32(totalRequests - maxConcurrent)
+	if dropped != expectedDropped {
+		t.Errorf("expected %d dropped packets, got %d", expectedDropped, dropped)
+	}
+
+	// Verify max active never exceeded the limit
+	maxActive := atomic.LoadInt32(&maxActiveReached)
+	if maxActive > maxConcurrent {
+		t.Errorf("max concurrent limit exceeded: limit=%d, actual=%d", maxConcurrent, maxActive)
+	}
+}
+
+// TestMaxConcurrentZero tests that MaxConcurrent=0 means unlimited.
+func TestMaxConcurrentZero(t *testing.T) {
+	const totalRequests = 10
+
+	var activeRequests int32
+	completedRequests := make(chan struct{}, totalRequests)
+
+	HandleFunc("unlimited.example.com.", func(w ResponseWriter, req *Msg) {
+		atomic.AddInt32(&activeRequests, 1)
+		defer atomic.AddInt32(&activeRequests, -1)
+
+		// Small delay to ensure concurrency
+		time.Sleep(50 * time.Millisecond)
+
+		m := new(Msg)
+		m.SetReply(req)
+		if err := w.WriteMsg(m); err != nil {
+			t.Errorf("WriteMsg failed: %v", err)
+		}
+		completedRequests <- struct{}{}
+	})
+	defer HandleRemove("unlimited.example.com.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.MaxConcurrent = 0 // unlimited
+		srv.OnDropped = func(addr net.Addr) {
+			t.Error("OnDropped should not be called when MaxConcurrent=0")
+		}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer func() {
+		if err := s.Shutdown(); err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+	}()
+
+	// Launch goroutines to make concurrent requests
+	var wg sync.WaitGroup
+	for i := 0; i < totalRequests; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c := &Client{Net: "tcp", Timeout: 2 * time.Second}
+			m := new(Msg)
+			m.SetQuestion("unlimited.example.com.", TypeTXT)
+			_, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		}()
+	}
+
+	// Wait for all requests to complete
+	wg.Wait()
+
+	// Verify all requests completed
+	close(completedRequests)
+	completed := 0
+	for range completedRequests {
+		completed++
+	}
+
+	if completed != totalRequests {
+		t.Errorf("expected %d completed requests, got %d", totalRequests, completed)
+	}
+}
+
+// TestMaxConcurrentRelease tests that semaphore slots are properly released.
+func TestMaxConcurrentRelease(t *testing.T) {
+	const maxConcurrent = 1
+
+	var requestCount int32
+
+	HandleFunc("release.example.com.", func(w ResponseWriter, req *Msg) {
+		atomic.AddInt32(&requestCount, 1)
+		m := new(Msg)
+		m.SetReply(req)
+		if err := w.WriteMsg(m); err != nil {
+			t.Errorf("WriteMsg failed: %v", err)
+		}
+	})
+	defer HandleRemove("release.example.com.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.MaxConcurrent = maxConcurrent
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer func() {
+		if err := s.Shutdown(); err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+	}()
+
+	// Make sequential requests
+	for i := 0; i < 5; i++ {
+		c := &Client{Net: "tcp", Timeout: 2 * time.Second}
+		m := new(Msg)
+		m.SetQuestion("release.example.com.", TypeTXT)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			t.Errorf("request %d failed: %v", i, err)
+		}
+	}
+
+	// Verify all requests were handled
+	count := atomic.LoadInt32(&requestCount)
+	if count != 5 {
+		t.Errorf("expected 5 completed requests, got %d", count)
+	}
+}
+
+// TestMaxConcurrentOnDroppedCallback tests that OnDropped receives correct addresses.
+func TestMaxConcurrentOnDroppedCallback(t *testing.T) {
+	const maxConcurrent = 1
+
+	var droppedAddrs []net.Addr
+	var mu sync.Mutex
+
+	blockChan := make(chan struct{})
+	HandleFunc("dropped.example.com.", func(w ResponseWriter, req *Msg) {
+		<-blockChan
+		m := new(Msg)
+		m.SetReply(req)
+		if err := w.WriteMsg(m); err != nil {
+			t.Errorf("WriteMsg failed: %v", err)
+		}
+	})
+	defer HandleRemove("dropped.example.com.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.MaxConcurrent = maxConcurrent
+		srv.OnDropped = func(addr net.Addr) {
+			mu.Lock()
+			droppedAddrs = append(droppedAddrs, addr)
+			mu.Unlock()
+		}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer func() {
+		if err := s.Shutdown(); err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+	}()
+
+	// Launch 3 concurrent requests
+	var wg sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c := &Client{Net: "tcp", Timeout: 2 * time.Second}
+			m := new(Msg)
+			m.SetQuestion("dropped.example.com.", TypeTXT)
+			_, _, _ = c.Exchange(m, addrstr)
+		}()
+	}
+
+	// Wait for requests to pile up
+	time.Sleep(200 * time.Millisecond)
+
+	// Release handler
+	close(blockChan)
+
+	// Wait for completion
+	wg.Wait()
+
+	// Verify OnDropped was called with valid addresses
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(droppedAddrs) != 2 {
+		t.Errorf("expected 2 dropped connections, got %d", len(droppedAddrs))
+	}
+
+	for _, addr := range droppedAddrs {
+		if addr == nil {
+			t.Error("OnDropped received nil address")
+		}
+	}
+}
