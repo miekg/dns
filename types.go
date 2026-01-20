@@ -275,7 +275,7 @@ func (q *Question) len(off int, compression map[string]struct{}) int {
 	return l
 }
 
-func (q *Question) String() (s string) {
+func (q Question) String() (s string) {
 	// prefix with ; (as in dig)
 	s = ";" + sprintName(q.Name) + "\t"
 	s += Class(q.Qclass).String() + "\t"
