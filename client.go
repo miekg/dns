@@ -62,6 +62,12 @@ type Client struct {
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	TsigProvider TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
 
+	// IgnoreRcodes specifies response codes to ignore when reading UDP replies.
+	// Responses with these rcodes are treated as potentially hijacked and skipped,
+	// waiting for another response. Common use: []int{RcodeNameError} to ignore
+	// NXDomain responses that may be injected by network middleboxes.
+	IgnoreRcodes []int
+
 	// SingleInflight previously serialised multiple concurrent queries for the
 	// same Qname, Qtype and Qclass to ensure only one would be in flight at a
 	// time.
@@ -109,6 +115,16 @@ func (c *Client) writeTimeout() time.Duration {
 		return c.WriteTimeout
 	}
 	return dnsTimeout
+}
+
+// shouldIgnoreRcode returns true if the given rcode is in the IgnoreRcodes list.
+func (c *Client) shouldIgnoreRcode(rcode int) bool {
+	for _, ignored := range c.IgnoreRcodes {
+		if rcode == ignored {
+			return true
+		}
+	}
+	return false
 }
 
 // Dial connects to the address on the named network.
@@ -230,11 +246,19 @@ func (c *Client) ExchangeWithConnContext(ctx context.Context, m *Msg, co *Conn) 
 	if isPacketConn(co.Conn) {
 		for {
 			r, err = co.ReadMsg()
-			// Ignore replies with mismatched IDs because they might be
-			// responses to earlier queries that timed out.
-			if err != nil || r.Id == m.Id {
+			if err != nil {
 				break
 			}
+			// Ignore replies with mismatched IDs because they might be
+			// responses to earlier queries that timed out.
+			if r.Id != m.Id {
+				continue
+			}
+			// Ignore responses with rcodes that may indicate hijacking.
+			if c.shouldIgnoreRcode(r.Rcode) {
+				continue
+			}
+			break
 		}
 	} else {
 		r, err = co.ReadMsg()

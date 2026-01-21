@@ -319,6 +319,59 @@ func TestClientSyncBadThenGoodID(t *testing.T) {
 	}
 }
 
+func TestClientIgnoreRcodes(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerNXDomainThenSuccess)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+
+	t.Run("WithIgnoreRcodes", func(t *testing.T) {
+		// Test with IgnoreRcodes set to ignore NXDomain
+		c := &Client{
+			IgnoreRcodes: []int{RcodeNameError},
+		}
+		r, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			t.Fatalf("failed to exchange: %v", err)
+		}
+		if r == nil {
+			t.Fatal("response is nil")
+		}
+		if r.Rcode != RcodeSuccess {
+			t.Errorf("expected RcodeSuccess, got %v", r.Rcode)
+		}
+		if len(r.Extra) == 0 {
+			t.Fatal("expected extra records in response")
+		}
+		txt := r.Extra[0].(*TXT).Txt[0]
+		if txt != "Hello world" {
+			t.Errorf("unexpected TXT response: %s", txt)
+		}
+	})
+
+	t.Run("WithoutIgnoreRcodes", func(t *testing.T) {
+		// Test without IgnoreRcodes - should return the first (NXDomain) response
+		c := new(Client)
+		r, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			t.Fatalf("failed to exchange: %v", err)
+		}
+		if r == nil {
+			t.Fatal("response is nil")
+		}
+		if r.Rcode != RcodeNameError {
+			t.Errorf("expected RcodeNameError (NXDomain), got %v", r.Rcode)
+		}
+	})
+}
+
 func TestClientSyncTCPBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
