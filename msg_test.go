@@ -243,6 +243,34 @@ func TestPackDomainNameCompressionMap(t *testing.T) {
 	}
 }
 
+func TestPackDomainNameBufferSize(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		input     string
+		bufSize   int
+		expectOff int
+		expectErr bool
+	}{
+		{"generous_buffer", "example.com.", 255, 13, false},
+		{"exact_fit", "example.com.", 13, 13, false},
+		{"err_write_last_label", "example.com.", 10, 10, true},
+		{"err_write_root_label", "example.com.", 12, 12, true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := make([]byte, tt.bufSize)
+			off, err := PackDomainName(tt.input, msg, 0, nil, false)
+			if off != tt.expectOff {
+				t.Errorf("wrong offset: expected %d, got %d", tt.expectOff, off)
+			}
+			if tt.expectErr && err == nil {
+				t.Errorf("expected error, got none")
+			} else if !tt.expectErr && err != nil {
+				t.Errorf("expected sucess, got error (%s)", err)
+			}
+		})
+	}
+}
+
 func TestPackDomainNameNSECTypeBitmap(t *testing.T) {
 	ownername := "some-very-long-ownername.com."
 	msg := &Msg{
