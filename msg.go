@@ -341,12 +341,10 @@ loop:
 	// Trailing root label
 	if off < len(msg) {
 		msg[off] = 0
-		off += 1
-	} else {
-		return off, ErrBuf
+		return off + 1, nil
 	}
 
-	return off, nil
+	return off, ErrBuf
 }
 
 // isRootLabel returns whether s or bs, from off to end, is the root
