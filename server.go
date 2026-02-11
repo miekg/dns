@@ -59,6 +59,12 @@ type ResponseWriter interface {
 	Hijack()
 }
 
+// Conner exposes the underlying connection and UDP session metadata when available.
+type Conner interface {
+	Conn() net.Conn
+	Session() *Session
+}
+
 // A ConnectionStater interface is used by a DNS Handler to access TLS connection state
 // when available.
 type ConnectionStater interface {
@@ -74,7 +80,7 @@ type response struct {
 	tsigProvider   TsigProvider
 	udp            net.PacketConn // i/o connection if UDP was used
 	tcp            net.Conn       // i/o connection if TCP was used
-	udpSession     *SessionUDP    // oob data to get egress interface right
+	udpSession     *Session       // oob data to get egress interface right
 	pcSession      net.Addr       // address to use when writing to a generic net.PacketConn
 	writer         Writer         // writer to output the raw DNS bits
 }
@@ -810,7 +816,7 @@ func (w *response) LocalAddr() net.Addr {
 func (w *response) RemoteAddr() net.Addr {
 	switch {
 	case w.udpSession != nil:
-		return w.udpSession.RemoteAddr()
+		return w.udpSession.Addr
 	case w.pcSession != nil:
 		return w.pcSession
 	case w.tcp != nil:
@@ -857,4 +863,20 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 		return &t
 	}
 	return nil
+}
+
+// Conn exposes the underlying net.Conn when available. Callers should treat the returned
+// connection as read-only and must not close it.
+func (w *response) Conn() net.Conn {
+	if w.tcp != nil {
+		return w.tcp
+	}
+	if c, ok := w.udp.(net.Conn); ok {
+		return c
+	}
+	return nil
+}
+
+func (w *response) Session() *Session {
+	return w.udpSession
 }
