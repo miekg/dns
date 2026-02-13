@@ -17,6 +17,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
@@ -70,6 +71,36 @@ var (
 	ErrSoa           error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
 	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
 )
+
+// compressionPackPool and compressionLenPool exist because every call to
+// Pack (with compression) and Len allocates a fresh map that becomes garbage
+// immediately after the call returns. In mDNS service discovery and similar
+// hot paths where messages are packed/measured thousands of times per second,
+// this map churn dominates GC pressure. Pooling lets us reuse the already-
+// grown map backing store across calls, turning a per-call allocation into
+// an amortized zero-allocation operation. Maps are safe to reuse after
+// clear() which preserves the allocated bucket memory.
+var compressionPackPool = sync.Pool{
+	New: func() any { return make(map[string]uint16) },
+}
+
+var compressionLenPool = sync.Pool{
+	New: func() any { return make(map[string]struct{}) },
+}
+
+// domainNameBufPool reuses the scratch buffer for building domain name strings
+// during unpacking. Every domain name in every RR triggers a 1012-byte buffer
+// allocation (maxDomainNamePresentationLength) that is only needed transiently —
+// the final string() call copies the content, so the buffer can be recycled.
+// This is the single hottest allocation in the unpack path since domain names
+// appear in virtually every record. We store *[]byte (pointer to slice header)
+// so the pool interface doesn't cause an allocation of its own.
+var domainNameBufPool = sync.Pool{
+	New: func() any {
+		buf := make([]byte, 0, maxDomainNamePresentationLength)
+		return &buf
+	},
+}
 
 // Id by default returns a 16-bit random number to be used as a message id. The
 // number is drawn from a cryptographically secure random number generator.
@@ -379,7 +410,12 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // When an error is encountered, the unpacked name will be discarded
 // and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
-	s := make([]byte, 0, maxDomainNamePresentationLength)
+	sp := domainNameBufPool.Get().(*[]byte)
+	s := (*sp)[:0]
+	defer func() {
+		*sp = s[:0]
+		domainNameBufPool.Put(sp)
+	}()
 	off1 := 0
 	lenmsg := len(msg)
 	budget := maxDomainNameWireOctets
@@ -652,8 +688,18 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 // If we cannot unpack the whole array, then it will return nil
 func unpackRRslice(l int, msg []byte, off int) (dst1 []RR, off1 int, err error) {
 	var r RR
-	// Don't pre-allocate, l may be under attacker control
-	var dst []RR
+	// Typical DNS responses carry 1–30 RRs per section, but l comes from
+	// the wire and could be attacker-controlled. A nil slice that grows via
+	// append would cause O(log n) allocations for normal traffic. We
+	// pre-allocate up to 64 slots — enough to satisfy the vast majority of
+	// legitimate responses in a single allocation — while capping the upper
+	// bound so a malicious qdcount/ancount can't trick us into a huge alloc.
+	const maxPreallocRRs = 64
+	prealloc := l
+	if prealloc > maxPreallocRRs {
+		prealloc = maxPreallocRRs
+	}
+	dst := make([]RR, 0, prealloc)
 	for i := 0; i < l; i++ {
 		off1 := off
 		r, off, err = UnpackRR(msg, off)
@@ -683,38 +729,44 @@ func (h *MsgHdr) String() string {
 		return "<nil> MsgHdr"
 	}
 
-	s := ";; opcode: " + OpcodeToString[h.Opcode]
-	s += ", status: " + RcodeToString[h.Rcode]
-	s += ", id: " + strconv.Itoa(int(h.Id)) + "\n"
+	var s strings.Builder
+	s.Grow(128)
+	s.WriteString(";; opcode: ")
+	s.WriteString(OpcodeToString[h.Opcode])
+	s.WriteString(", status: ")
+	s.WriteString(RcodeToString[h.Rcode])
+	s.WriteString(", id: ")
+	s.WriteString(strconv.Itoa(int(h.Id)))
+	s.WriteByte('\n')
 
-	s += ";; flags:"
+	s.WriteString(";; flags:")
 	if h.Response {
-		s += " qr"
+		s.WriteString(" qr")
 	}
 	if h.Authoritative {
-		s += " aa"
+		s.WriteString(" aa")
 	}
 	if h.Truncated {
-		s += " tc"
+		s.WriteString(" tc")
 	}
 	if h.RecursionDesired {
-		s += " rd"
+		s.WriteString(" rd")
 	}
 	if h.RecursionAvailable {
-		s += " ra"
+		s.WriteString(" ra")
 	}
 	if h.Zero { // Hmm
-		s += " z"
+		s.WriteString(" z")
 	}
 	if h.AuthenticatedData {
-		s += " ad"
+		s.WriteString(" ad")
 	}
 	if h.CheckingDisabled {
-		s += " cd"
+		s.WriteString(" cd")
 	}
 
-	s += ";"
-	return s
+	s.WriteByte(';')
+	return s.String()
 }
 
 // Pack packs a Msg: it is converted to wire format.
@@ -728,8 +780,11 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
 	if dns.Compress && dns.isCompressible() {
-		compression := make(map[string]uint16) // Compression pointer mappings.
-		return dns.packBufferWithCompressionMap(buf, compressionMap{int: compression}, true)
+		compression := compressionPackPool.Get().(map[string]uint16)
+		msg, err = dns.packBufferWithCompressionMap(buf, compressionMap{int: compression}, true)
+		clear(compression)
+		compressionPackPool.Put(compression)
+		return msg, err
 	}
 
 	return dns.packBufferWithCompressionMap(buf, compressionMap{}, false)
@@ -835,9 +890,11 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	}
 
 	// Qdcount, Ancount, Nscount, Arcount can't be trusted, as they are
-	// attacker controlled. This means we can't use them to pre-allocate
-	// slices.
-	dns.Question = nil
+	// Qdcount is attacker-controlled so we can't trust it for large
+	// pre-allocations, but virtually all DNS/mDNS traffic carries exactly
+	// one question. Pre-allocating cap 1 lets the common case avoid a
+	// slice growth without risking an oversized allocation.
+	dns.Question = make([]Question, 0, 1)
 	for i := 0; i < int(dh.Qdcount); i++ {
 		off1 := off
 		var q Question
@@ -895,66 +952,84 @@ func (dns *Msg) String() string {
 	if dns == nil {
 		return "<nil> MsgHdr"
 	}
-	s := dns.MsgHdr.String() + " "
+	var s strings.Builder
+	s.Grow(512)
+	s.WriteString(dns.MsgHdr.String())
+	s.WriteByte(' ')
 	if dns.MsgHdr.Opcode == OpcodeUpdate {
-		s += "ZONE: " + strconv.Itoa(len(dns.Question)) + ", "
-		s += "PREREQ: " + strconv.Itoa(len(dns.Answer)) + ", "
-		s += "UPDATE: " + strconv.Itoa(len(dns.Ns)) + ", "
-		s += "ADDITIONAL: " + strconv.Itoa(len(dns.Extra)) + "\n"
+		s.WriteString("ZONE: ")
+		s.WriteString(strconv.Itoa(len(dns.Question)))
+		s.WriteString(", PREREQ: ")
+		s.WriteString(strconv.Itoa(len(dns.Answer)))
+		s.WriteString(", UPDATE: ")
+		s.WriteString(strconv.Itoa(len(dns.Ns)))
+		s.WriteString(", ADDITIONAL: ")
+		s.WriteString(strconv.Itoa(len(dns.Extra)))
+		s.WriteByte('\n')
 	} else {
-		s += "QUERY: " + strconv.Itoa(len(dns.Question)) + ", "
-		s += "ANSWER: " + strconv.Itoa(len(dns.Answer)) + ", "
-		s += "AUTHORITY: " + strconv.Itoa(len(dns.Ns)) + ", "
-		s += "ADDITIONAL: " + strconv.Itoa(len(dns.Extra)) + "\n"
+		s.WriteString("QUERY: ")
+		s.WriteString(strconv.Itoa(len(dns.Question)))
+		s.WriteString(", ANSWER: ")
+		s.WriteString(strconv.Itoa(len(dns.Answer)))
+		s.WriteString(", AUTHORITY: ")
+		s.WriteString(strconv.Itoa(len(dns.Ns)))
+		s.WriteString(", ADDITIONAL: ")
+		s.WriteString(strconv.Itoa(len(dns.Extra)))
+		s.WriteByte('\n')
 	}
 	opt := dns.IsEdns0()
 	if opt != nil {
 		// OPT PSEUDOSECTION
-		s += opt.String() + "\n"
+		s.WriteString(opt.String())
+		s.WriteByte('\n')
 	}
 	if len(dns.Question) > 0 {
 		if dns.MsgHdr.Opcode == OpcodeUpdate {
-			s += "\n;; ZONE SECTION:\n"
+			s.WriteString("\n;; ZONE SECTION:\n")
 		} else {
-			s += "\n;; QUESTION SECTION:\n"
+			s.WriteString("\n;; QUESTION SECTION:\n")
 		}
 		for _, r := range dns.Question {
-			s += r.String() + "\n"
+			s.WriteString(r.String())
+			s.WriteByte('\n')
 		}
 	}
 	if len(dns.Answer) > 0 {
 		if dns.MsgHdr.Opcode == OpcodeUpdate {
-			s += "\n;; PREREQUISITE SECTION:\n"
+			s.WriteString("\n;; PREREQUISITE SECTION:\n")
 		} else {
-			s += "\n;; ANSWER SECTION:\n"
+			s.WriteString("\n;; ANSWER SECTION:\n")
 		}
 		for _, r := range dns.Answer {
 			if r != nil {
-				s += r.String() + "\n"
+				s.WriteString(r.String())
+				s.WriteByte('\n')
 			}
 		}
 	}
 	if len(dns.Ns) > 0 {
 		if dns.MsgHdr.Opcode == OpcodeUpdate {
-			s += "\n;; UPDATE SECTION:\n"
+			s.WriteString("\n;; UPDATE SECTION:\n")
 		} else {
-			s += "\n;; AUTHORITY SECTION:\n"
+			s.WriteString("\n;; AUTHORITY SECTION:\n")
 		}
 		for _, r := range dns.Ns {
 			if r != nil {
-				s += r.String() + "\n"
+				s.WriteString(r.String())
+				s.WriteByte('\n')
 			}
 		}
 	}
 	if len(dns.Extra) > 0 && (opt == nil || len(dns.Extra) > 1) {
-		s += "\n;; ADDITIONAL SECTION:\n"
+		s.WriteString("\n;; ADDITIONAL SECTION:\n")
 		for _, r := range dns.Extra {
 			if r != nil && r.Header().Rrtype != TypeOPT {
-				s += r.String() + "\n"
+				s.WriteString(r.String())
+				s.WriteByte('\n')
 			}
 		}
 	}
-	return s
+	return s.String()
 }
 
 // isCompressible returns whether the msg may be compressible.
@@ -972,8 +1047,11 @@ func (dns *Msg) Len() int {
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
 	if dns.Compress && dns.isCompressible() {
-		compression := make(map[string]struct{})
-		return msgLenWithCompressionMap(dns, compression)
+		compression := compressionLenPool.Get().(map[string]struct{})
+		l := msgLenWithCompressionMap(dns, compression)
+		clear(compression)
+		compressionLenPool.Put(compression)
+		return l
 	}
 
 	return msgLenWithCompressionMap(dns, nil)
