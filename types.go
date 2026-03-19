@@ -1673,7 +1673,10 @@ func euiToString(eui uint64, bits int) (hex string) {
 	return
 }
 
-// cloneSlice returns a shallow copy of s.
+// cloneSlice returns a copy of the slice s with a new backing array.
+// The elements themselves are not deep-copied, so this is a shallow
+// copy. For slices of value types (e.g. []byte), this is effectively
+// a deep copy.
 func cloneSlice[E any, S ~[]E](s S) S {
 	if s == nil {
 		return nil
