@@ -299,7 +299,7 @@ loop:
 					// where we need to insert the pointer later
 
 					// If compress is true, we're allowed to compress this dname
-					if compress {
+					if compress && p < off {
 						pointer = p // Where to point to
 						break loop
 					}
