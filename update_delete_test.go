@@ -147,6 +147,99 @@ func TestRemoveRRsetSIG0RoundTrip(t *testing.T) {
 		func(m *Msg, rr RR) { m.RemoveRRset([]RR{rr}) })
 }
 
+// TestRemoveRRsetDSSIG0RoundTrip is the §2.5.2 case that originally exposed
+// the bug fixed in UnpackRRWithHeader: when the placeholder type has
+// fixed-size scalar rdata fields (e.g. DS: KeyTag+Algorithm+DigestType =
+// 4 bytes), the pre-fix unpacker built a typed *DS with zero values and a
+// later re-pack emitted 4 phantom bytes, breaking SIG(0) verification.
+// With the fix, unpack returns *ANY for any CLASS=ANY+Rdlength=0 record
+// regardless of typed-rdata layout, restoring round-trip symmetry.
+//
+// TypeA is bug-immune because packDataA already short-circuits len(IP)==0
+// (see msg_helpers.go); this DS test catches the general case.
+func TestRemoveRRsetDSSIG0RoundTrip(t *testing.T) {
+	keyrr := &KEY{DNSKEY: DNSKEY{
+		Hdr: RR_Header{
+			Name:   "updater.example.",
+			Rrtype: TypeKEY,
+			Class:  ClassINET,
+			Ttl:    3600,
+		},
+		Algorithm: ED25519,
+	}}
+	priv, err := keyrr.Generate(256)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	m := new(Msg)
+	m.SetUpdate("example.")
+	// DS placeholder, the type that broke before the fix.
+	dsPlaceholder := &DS{Hdr: RR_Header{
+		Name:   "child.example.",
+		Rrtype: TypeDS,
+		Class:  ClassINET,
+		Ttl:    3600,
+	}}
+	m.RemoveRRset([]RR{dsPlaceholder})
+
+	now := uint32(time.Now().Unix())
+	sigrr := &SIG{RRSIG: RRSIG{
+		Hdr:        RR_Header{Name: ".", Rrtype: TypeSIG, Class: ClassANY},
+		Algorithm:  ED25519,
+		Expiration: now + 300,
+		Inception:  now - 300,
+		KeyTag:     keyrr.KeyTag(),
+		SignerName: keyrr.Hdr.Name,
+	}}
+	mb, err := sigrr.Sign(priv.(crypto.Signer), m)
+	if err != nil {
+		t.Fatalf("Sign: %v", err)
+	}
+
+	m2 := new(Msg)
+	if err := m2.Unpack(mb); err != nil {
+		t.Fatalf("Unpack of signed wire (%d bytes): %v\nwire: %s",
+			len(mb), err, hex.EncodeToString(mb))
+	}
+	if len(m2.Ns) != 1 {
+		t.Fatalf("unpacked Ns has %d RRs, want 1", len(m2.Ns))
+	}
+	// After the fix, a CLASS=ANY+Rdlength=0+TYPE=DS record must come back
+	// as *ANY (not *DS), preserving round-trip symmetry. Without the fix
+	// this is *DS and the SIG verification below fails.
+	if _, ok := m2.Ns[0].(*ANY); !ok {
+		t.Errorf("Ns[0] is %T, want *ANY (delete-RRset placeholder)", m2.Ns[0])
+	}
+	h := m2.Ns[0].Header()
+	if h.Rrtype != TypeDS {
+		t.Errorf("Rrtype = %d, want TypeDS (%d)", h.Rrtype, TypeDS)
+	}
+	if h.Class != ClassANY {
+		t.Errorf("Class = %d, want ClassANY (%d)", h.Class, ClassANY)
+	}
+	if h.Rdlength != 0 {
+		t.Errorf("Rdlength = %d, want 0", h.Rdlength)
+	}
+
+	if len(m2.Extra) != 1 {
+		t.Fatalf("Extra has %d RRs, want 1 (SIG)", len(m2.Extra))
+	}
+	sigrrwire, ok := m2.Extra[0].(*SIG)
+	if !ok {
+		t.Fatalf("Extra[0] is %T, want *SIG", m2.Extra[0])
+	}
+	for _, s := range []*SIG{sigrr, sigrrwire} {
+		src := "sigrr"
+		if s == sigrrwire {
+			src = "sigrrwire"
+		}
+		if err := s.Verify(keyrr, mb); err != nil {
+			t.Errorf("Verify(%s): %v", src, err)
+		}
+	}
+}
+
 // TestRemoveSIG0RoundTrip is the §2.5.4 variant.
 func TestRemoveSIG0RoundTrip(t *testing.T) {
 	testDeleteSIG0(t, "Remove",

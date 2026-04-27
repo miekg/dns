@@ -617,6 +617,18 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
 // RR_Header.
 func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
+	// RFC 2136 §2.5.2 "delete RRset" placeholders carry CLASS=ANY with no
+	// rdata (Rdlength=0). The wire form has zero rdata bytes, but most
+	// per-type pack() methods unconditionally serialize their fixed-size
+	// scalar fields (e.g. *DS.pack writes KeyTag+Algorithm+DigestType = 4
+	// zero bytes), so unpack→pack would not be byte-identical. Returning
+	// *ANY here matches what the high-level Msg.RemoveRRset constructor
+	// produces and what §2.5.3 (CLASS=ANY, TYPE=ANY) already returns,
+	// keeping the round-trip symmetric. Necessary for SIG(0) verification
+	// of inbound UPDATE messages on the receiver.
+	if h.Class == ClassANY && h.Rdlength == 0 && h.Rrtype != TypeANY {
+		return &ANY{Hdr: h}, off, nil
+	}
 	if newFn, ok := TypeToRR[h.Rrtype]; ok {
 		rr = newFn()
 		*rr.Header() = h
