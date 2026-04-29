@@ -319,6 +319,9 @@ func (rr *APL) len(off int, compression map[string]struct{}) int {
 
 func (rr *AVC) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
+	if len(rr.Txt) == 0 {
+		l += 1
+	}
 	for _, x := range rr.Txt {
 		l += len(x) + 1
 	}
@@ -566,6 +569,9 @@ func (rr *NIMLOC) len(off int, compression map[string]struct{}) int {
 
 func (rr *NINFO) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
+	if len(rr.ZSData) == 0 {
+		l += 1
+	}
 	for _, x := range rr.ZSData {
 		l += len(x) + 1
 	}
@@ -627,6 +633,9 @@ func (rr *PX) len(off int, compression map[string]struct{}) int {
 
 func (rr *RESINFO) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
+	if len(rr.Txt) == 0 {
+		l += 1
+	}
 	for _, x := range rr.Txt {
 		l += len(x) + 1
 	}
@@ -699,6 +708,9 @@ func (rr *SOA) len(off int, compression map[string]struct{}) int {
 
 func (rr *SPF) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
+	if len(rr.Txt) == 0 {
+		l += 1
+	}
 	for _, x := range rr.Txt {
 		l += len(x) + 1
 	}
@@ -787,6 +799,9 @@ func (rr *TSIG) len(off int, compression map[string]struct{}) int {
 
 func (rr *TXT) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
+	if len(rr.Txt) == 0 {
+		l += 1
+	}
 	for _, x := range rr.Txt {
 		l += len(x) + 1
 	}
