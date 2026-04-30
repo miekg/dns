@@ -457,7 +457,7 @@ func packTxt(txt []string, msg []byte, offset int) (int, error) {
 			return offset, ErrBuf
 		}
 		msg[offset] = 0
-		return offset, nil
+		return offset+1, nil
 	}
 	var err error
 	for _, s := range txt {

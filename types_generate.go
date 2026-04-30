@@ -182,6 +182,7 @@ func main() {
 				case `dns:"domain-name"`:
 					o("for _, x := range rr.%s { l += domainNameLen(x, off+l, compression, false) }\n")
 				case `dns:"txt"`:
+					o("if len(rr.%s) == 0 { l += 1 }\n")
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
 				case `dns:"apl"`:
 					o("for _, x := range rr.%s { l += x.len() }\n")
